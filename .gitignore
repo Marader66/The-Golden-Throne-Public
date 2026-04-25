@@ -1,0 +1,14 @@
+# BB build artifacts (binaries go to GitHub Releases, not git)
+*.zip
+/builds/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Local logs / scratch
+*.html
+*.tmp.txt
