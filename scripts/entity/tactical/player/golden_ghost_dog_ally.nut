@@ -7,7 +7,7 @@
 // on its own AI). Buffed stats scale with the Emperor's level so it stays
 // relevant late campaign.
 
-this.golden_ghost_dog_ally <- this.inherit("scripts/entity/tactical/direwolf", {
+this.golden_ghost_dog_ally <- this.inherit("scripts/entity/tactical/enemies/direwolf", {
 	m = {
 		EmperorLevel = 1
 	},

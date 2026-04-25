@@ -1,6 +1,6 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "2.8.7",
+	Version = "2.8.8",
 	Name = "The Golden Throne"
 };
 

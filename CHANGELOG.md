@@ -9,6 +9,10 @@ Newest first.
 
 ---
 
+## 2.8.8 — 2026-04-25
+
+**Hotfix — Spectral Hound failed to spawn.** The ghost dog ally introduced in v2.8.6 inherited from the wrong vanilla parent class, so the game could not load it. Three "failed to load script" errors appeared in the log on every campaign start, and the Spectral Hound never appeared in its event chain. Corrected the inherit path; the hound now spawns as intended.
+
 ## 2.8.5 — 2026-04-24
 
 **Dep-check — dropped hard `Hooks.require()` gate.** Matches the 11.9 change across the stack. Deps stay in the table as documentation; nothing blocks load on version mismatch.
