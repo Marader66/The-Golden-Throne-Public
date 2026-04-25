@@ -23,7 +23,7 @@ Both editions register as the same mod ID. **Install one or the other, never bot
 | Legends | 19.3.18 |
 | ROTU Core Inn | 2.1.2 |
 
-All Battle Brothers DLC are optional. The scenario uses what's installed and skips what isn't. Beasts & Exploration, Warriors of the North, and Blazing Deserts give the broadest content.
+**Battle Brothers DLC required:** Legends needs all the main DLC to run — Beasts & Exploration, Warriors of the North, Blazing Deserts, and Of Flesh and Faith. The Lindwurm Support Edition is recommended but not strictly required. The Golden Throne itself doesn't gate content on any specific DLC, but since Legends is a hard dependency, your install effectively needs the full set.
 
 ## Full feature list
 
