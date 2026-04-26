@@ -107,7 +107,19 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 			hitInfo.BodyPart = ::Const.BodyPart.Body;
 			hitInfo.BodyDamageMult = 1.0;
 			hitInfo.FatalityChanceMult = 1.0;
-			enemy.onDamageReceived(_user, this, hitInfo);
+			// v2.9.2: wrap onDamageReceived in try/catch. Third-party
+			// onDamageReceived hooks (e.g. Floating Combat Text mods) can
+			// throw on dying entities mid-removal during AoE chains —
+			// crashes BB Core. Public bug report 2026-04-25 (zalew):
+			// mod_floating_combat_text_separate_damage's hook crashed
+			// at line 46 when the second of two webknechts died from a
+			// single Pillar cast. Damage already applied; the throw is
+			// downstream cosmetic-hook noise. Swallow + log.
+			try {
+				enemy.onDamageReceived(_user, this, hitInfo);
+			} catch (e) {
+				::logWarning("[Pillar of Light] downstream onDamageReceived hook threw: " + e);
+			}
 			if (!_user.isHiddenToPlayer()) {
 				::Tactical.EventLog.log("[color=#FFD700]Pillar of Light[/color] scorches " + ::Const.UI.getColorizedEntityName(enemy) + " for [color=" + ::Const.UI.Color.NegativeValue + "]" + dmg + "[/color] damage.");
 			}

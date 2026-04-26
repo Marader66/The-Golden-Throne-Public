@@ -1,6 +1,6 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "2.8.8",
+	Version = "2.9.2",
 	Name = "The Golden Throne"
 };
 
@@ -249,7 +249,7 @@
 		&& !("GoldenGhostDog_Spec" in ::Const.World.Spawn.Troops))
 	{
 		::Const.World.Spawn.Troops.GoldenGhostDog_Spec <- {
-			Type     = ::Const.EntityType.Direwolf,
+			ID       = ::Const.EntityType.Direwolf,
 			Variant  = 0,
 			Script   = "scripts/entity/tactical/player/golden_ghost_dog_ally",
 			Strength = 1,

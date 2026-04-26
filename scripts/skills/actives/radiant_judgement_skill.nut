@@ -89,7 +89,17 @@ this.radiant_judgement_skill <- this.inherit("scripts/skills/skill", {
 		hitInfo.BodyPart = ::Const.BodyPart.Body;
 		hitInfo.BodyDamageMult = 1.0;
 		hitInfo.FatalityChanceMult = 1.0;
-		target.onDamageReceived(_user, this, hitInfo);
+		// v2.9.2: same try/catch as Pillar of Light. Third-party
+		// onDamageReceived hooks (Floating Combat Text mods) can throw
+		// on dying entities — see Pillar of Light comment for the
+		// public bug-report repro. Single-target so less likely to
+		// trip than Pillar's AoE, but identical pipeline so identical
+		// guard.
+		try {
+			target.onDamageReceived(_user, this, hitInfo);
+		} catch (e) {
+			::logWarning("[Radiant Judgement] downstream onDamageReceived hook threw: " + e);
+		}
 
 		if (!_user.isHiddenToPlayer()) {
 			::Tactical.EventLog.log("[color=#FFD700]Radiant Judgement[/color] strikes " + ::Const.UI.getColorizedEntityName(target) + " for [color=" + ::Const.UI.Color.NegativeValue + "]" + dmg + "[/color] holy damage.");

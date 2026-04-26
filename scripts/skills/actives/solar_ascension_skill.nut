@@ -4,7 +4,7 @@ this.solar_ascension_skill <- this.inherit("scripts/skills/skill", {
 	function create() {
 		this.m.ID = "actives.solar_ascension";
 		this.m.Name = "Solar Ascension";
-		this.m.Description = "The Emperor ascends for one terrible moment, becoming a second sun. The fallen rise, borrowed from death for as long as this light endures. This miracle is given only once in a reign.";
+		this.m.Description = "The Emperor ascends for one terrible moment, becoming a second sun. The fallen rise, borrowed from death for as long as this light endures. The living are remade — vigor returned, exhaustion lifted, every blade and prayer ready again. This miracle is given only once in a reign.";
 		this.m.Icon = "ui/perks/holyfire_circle.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
@@ -45,6 +45,10 @@ this.solar_ascension_skill <- this.inherit("scripts/skills/skill", {
 		ret.push({
 			id = 11, type = "text", icon = "ui/icons/melee_skill.png",
 			text = "Sears the eyes of every sighted enemy: [color=" + ::Const.UI.Color.NegativeValue + "]2 stacks of Blindness[/color]."
+		});
+		ret.push({
+			id = 12, type = "text", icon = "ui/icons/action_points.png",
+			text = "Refreshes every living ally: [color=" + ::Const.UI.Color.PositiveValue + "]Action Points restored[/color], [color=" + ::Const.UI.Color.PositiveValue + "]Fatigue cleared[/color], [color=" + ::Const.UI.Color.PositiveValue + "]all skill cooldowns reset[/color]."
 		});
 		return ret;
 	}
@@ -104,11 +108,33 @@ this.solar_ascension_skill <- this.inherit("scripts/skills/skill", {
 			}
 		}
 
+		// v2.9.0 — team refresh. Every living ally on the player's faction
+		// (caster included) gets AP restored to max, fatigue cleared, and
+		// every active skill's cooldown reset. Pairs with the once-per-
+		// campaign cap so the power is contained.
+		local refreshed = 0;
+		local livingAllies = ::Tactical.Entities.getInstancesOfFaction(::Const.Faction.Player);
+		foreach (ally in livingAllies) {
+			if (ally == null) continue;
+			if (!ally.isAlive()) continue;
+			if (ally.isDying()) continue;
+
+			try { ally.setActionPoints(ally.getCurrentProperties().ActionPoints); } catch (e) {}
+			try { ally.setFatigue(0); } catch (e) {}
+
+			local skills = ally.getSkills().query(::Const.SkillType.Active);
+			foreach (sk in skills) {
+				if (sk == null) continue;
+				try { sk.setCooldown(0); } catch (e) {}
+			}
+			refreshed += 1;
+		}
+
 		::World.Flags.set("GoldenThroneSolarAscensionUsed", true);
 		this.m.UsedThisCampaign = true;
 
 		if (!_user.isHiddenToPlayer()) {
-			::Tactical.EventLog.log("[color=#FFD700]The Emperor ascends. " + revived + " of the fallen return to the light. " + blinded + " enemies reel, blinded.[/color]");
+			::Tactical.EventLog.log("[color=#FFD700]The Emperor ascends. " + revived + " of the fallen return to the light. " + blinded + " enemies reel, blinded. " + refreshed + " allies are remade.[/color]");
 		}
 		return true;
 	}

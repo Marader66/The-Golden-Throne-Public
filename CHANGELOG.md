@@ -9,6 +9,30 @@ Newest first.
 
 ---
 
+## 2.9.2 — 2026-04-25
+
+**Hotfix — Pillar of Light + Radiant Judgement crash with floating-combat-text mods.** First public bug report (thanks zalew): the Emperor's Pillar of Light AoE could hard-crash the game when it killed multiple enemies in one cast and a floating-damage-number mod (Floating Combat Text — Separate Damage, Nexus 247) was installed. The third-party mod's hook tried to display floating numbers on a unit that was already mid-removal from the field, threw, and BB Core promoted the throw to a critical exception.
+
+Fix: wrap the damage call in Pillar of Light AND Radiant Judgement with try/catch. The damage is already applied before any cosmetic display hook runs; if a display mod throws on a dying unit, we log a warning and combat continues.
+
+Save-safe.
+
+## 2.9.1 — 2026-04-25
+
+**Hotfix — Spectral Hound spec key fix.** Updated the Spectral Hound's troop registration to use the canonical `ID` key instead of `Type`. The third-party Dev Console Addons mod iterates the troop table at load and reads `entry.ID`; with the wrong key, that mod crashed the game at the main menu for anyone who had it installed alongside Golden Throne. The Spectral Hound itself was unaffected — this only blocked load when Dev Console Addons was present.
+
+Save-safe.
+
+## 2.9.0 — 2026-04-25
+
+**Feat — Solar Ascension absorbs the team refresh.** The Emperor's level-20 once-per-campaign ultimate now does three things in a single cast: revives every fallen ally at half HP, blinds every sighted enemy for 2 stacks of Blindness, AND refreshes every living ally on the player's faction (action points restored to max, fatigue cleared, every active skill's cooldown reset). The caster is included — the Emperor can act again the same turn.
+
+Power level: contained at the existing once-per-campaign cap. The nuclear option is properly nuclear now.
+
+Tooltip and description updated. Existing revive + blind effects unchanged. Save-safe — no new persistent fields, the same once-per-campaign world flag still gates use.
+
+Golden Command (level 10) is unchanged — still single-target, still once per battle, still resets one ally's AP and 50 fatigue. Solar Ascension is the team-wide variant.
+
 ## 2.8.8 — 2026-04-25
 
 **Hotfix — Spectral Hound failed to spawn.** The ghost dog ally introduced in v2.8.6 inherited from the wrong vanilla parent class, so the game could not load it. Three "failed to load script" errors appeared in the log on every campaign start, and the Spectral Hound never appeared in its event chain. Corrected the inherit path; the hound now spawns as intended.
