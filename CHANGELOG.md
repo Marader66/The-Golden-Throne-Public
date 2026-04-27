@@ -9,33 +9,108 @@ Newest first.
 
 ---
 
+## 2.9.3 — 2026-04-26
+
+**Hotfix — Spectral Hound death crash on Legends 19.3.19 (or any direwolf-onDeath hook reading a sparse `_killer` / `_skill`).**
+
+A user running Legends 19.3.19 + public ROTU 2.x reported an in-combat
+exception: `the index 'Name' does not exist` at `direwolf.nut:101`,
+propagating from the Spectral Hound's death (`golden_ghost_dog_ally.onDeath`
+calling parent `direwolf.onDeath`). Either Legends 19.3.19's direwolf
+hook or another mod in the load order reads `_killer.Name` or
+`_skill.Name` during the death-handling path, and one of those fields is
+missing on this particular kill chain.
+
+Two pre-existing bugs in our `onDeath` made it worse:
+
+1. The catch branch retried the same `direwolf.onDeath(...)` call that
+   just threw — same code, same throw, no recovery
+2. The `addFallen` monkey-patch (the obituary-suppression trick) was
+   never restored if the first call threw. Every subsequent ally death
+   in the same combat would skip the obituary write — silent state leak
+
+Fix: restructured the `onDeath` wrapper to restore `addFallen`
+unconditionally, and catch downstream throws quietly with a
+`logWarning` instead of re-calling. Death animation may be partial when
+a downstream hook fails, but combat keeps running and the engine
+doesn't hang.
+
+**Save-compat:** none affected (runtime behavior only, no serialize
+changes).
+
+**Files changed:**
+- `scripts/entity/tactical/player/golden_ghost_dog_ally.nut`
+- `scripts/!mods_preload/mod_golden_throne.nut` (version bump)
+
+---
+
 ## 2.9.2 — 2026-04-25
 
-**Hotfix — Pillar of Light + Radiant Judgement crash with floating-combat-text mods.** First public bug report (thanks zalew): the Emperor's Pillar of Light AoE could hard-crash the game when it killed multiple enemies in one cast and a floating-damage-number mod (Floating Combat Text — Separate Damage, Nexus 247) was installed. The third-party mod's hook tried to display floating numbers on a unit that was already mid-removal from the field, threw, and BB Core promoted the throw to a critical exception.
+**Hotfix — Pillar of Light + Radiant Judgement crash with floating-combat-text mods.**
 
-Fix: wrap the damage call in Pillar of Light AND Radiant Judgement with try/catch. The damage is already applied before any cosmetic display hook runs; if a display mod throws on a dying unit, we log a warning and combat continues.
+First public bug report against the GitHub release: user `zalew` cast Pillar of
+Light on a webknecht cluster; the AoE killed two webknechts in one cast; on
+the second death the `mod_floating_combat_text_separate_damage` (Nexus 247)
+hook crashed at its own `mod_floating.nut:46` while trying to spawn floating
+text on the dying-but-not-yet-removed entity. Throw escaped our
+`enemy.onDamageReceived(_user, this, hitInfo)` call at
+`pillar_of_light_skill.nut:111` and BB Core promoted to a critical exception
+— hard crash.
 
-Save-safe.
+Same family as Unified Patch Fix 5 (FoTN intercept-effect off-map crash):
+third-party hook doesn't handle entities mid-removal.
+
+Fix: wrap our `onDamageReceived` calls in Pillar of Light and Radiant
+Judgement with try/catch. Damage is already applied before the hook chain
+runs; if a downstream cosmetic hook throws, we log it as a warning and
+continue. Combat doesn't crash. The dying entity is dead either way.
+
+Save-safe — no persistent fields touched, no behavior change for the
+common (non-crashing) path. Existing campaigns work unchanged.
 
 ## 2.9.1 — 2026-04-25
 
-**Hotfix — Spectral Hound spec key fix.** Updated the Spectral Hound's troop registration to use the canonical `ID` key instead of `Type`. The third-party Dev Console Addons mod iterates the troop table at load and reads `entry.ID`; with the wrong key, that mod crashed the game at the main menu for anyone who had it installed alongside Golden Throne. The Spectral Hound itself was unaffected — this only blocked load when Dev Console Addons was present.
+**Hotfix — `GoldenGhostDog_Spec` registration used `Type` instead of `ID`.**
+Kabu hit a fatal mod-load crash from `mod_dev_console_addon` (Dev Console
+Addons) v1.1.23 — its load queue iterates `::Const.World.Spawn.Troops` and
+reads `entry.ID` on every spec. Our ghost-dog spec used `Type =
+::Const.EntityType.Direwolf` instead of the canonical `ID =
+::Const.EntityType.Direwolf`, so the addon's `.ID` access threw `the index
+'ID' does not exist` and blocked the game at the main menu.
 
-Save-safe.
+Mismatch was a regression in the ghost-dog spec only — Marader's Roster
+and vanilla follow the correct `ID = ...` shape.
+
+Save-safe — the spec key didn't matter for any code path we exercise
+ourselves; no in-game behavior change. Just unblocks Kabu's load.
+
+---
 
 ## 2.9.0 — 2026-04-25
 
-**Feat — Solar Ascension absorbs the team refresh.** The Emperor's level-20 once-per-campaign ultimate now does three things in a single cast: revives every fallen ally at half HP, blinds every sighted enemy for 2 stacks of Blindness, AND refreshes every living ally on the player's faction (action points restored to max, fatigue cleared, every active skill's cooldown reset). The caster is included — the Emperor can act again the same turn.
+**Feat — Solar Ascension absorbs the team refresh.** The L20 once-per-campaign
+ultimate now also resets every living ally on the player's faction:
 
-Power level: contained at the existing once-per-campaign cap. The nuclear option is properly nuclear now.
+- Action Points restored to max
+- Fatigue cleared to 0
+- Every active skill's cooldown reset to 0
 
-Tooltip and description updated. Existing revive + blind effects unchanged. Save-safe — no new persistent fields, the same once-per-campaign world flag still gates use.
+The caster (Emperor) is included — they get to act again immediately after
+casting.
 
-Golden Command (level 10) is unchanged — still single-target, still once per battle, still resets one ally's AP and 50 fatigue. Solar Ascension is the team-wide variant.
+Power level: contained at the existing once-per-campaign cap. The Emperor's
+nuclear option is now properly nuclear — revives the fallen, blinds the
+sighted, and gives the whole team a clean second turn.
 
-## 2.8.8 — 2026-04-25
+Tooltip + description updated. Existing revive + blind effects unchanged.
+Save-safe — no new persistent fields; the existing
+`GoldenThroneSolarAscensionUsed` world flag and `m.UsedThisCampaign` mirror
+still gate the once-per-campaign cap.
 
-**Hotfix — Spectral Hound failed to spawn.** The ghost dog ally introduced in v2.8.6 inherited from the wrong vanilla parent class, so the game could not load it. Three "failed to load script" errors appeared in the log on every campaign start, and the Spectral Hound never appeared in its event chain. Corrected the inherit path; the hound now spawns as intended.
+Golden Command (L10) is unchanged — still single-target, still once-per-
+battle. Solar Ascension is the team-wide version.
+
+---
 
 ## 2.8.5 — 2026-04-24
 
@@ -49,7 +124,7 @@ Golden Command (level 10) is unchanged — still single-target, still once per b
 
 **Hotfix — dep-check convention (2.8.2) used wrong mod IDs + wrong getMod contract.** Two bugs in yesterday's 2.8.2 shipping version:
 
-1. `Deps.Required`/`TestedAgainst` used zip filenames as mod IDs. Actual registered IDs differ: `mod_rotucore_inn` → **`mod_ROTUC`**, `mod_fotn` → **`mod_fury_of_the_northmen`**, `mod_Path_of_the_Vattghern` → **`mod_PoV`**.
+1. `Deps.Required`/`TestedAgainst` used zip filenames as mod IDs. Actual registered IDs differ: ROTU is `mod_ROTUC`, FoTN is `mod_fury_of_the_northmen`, PoV is `mod_PoV`.
 2. `::Hooks.getMod(id)` throws when the mod isn't registered — it doesn't return null. The `if (mod == null) continue;` guard never ran. Replaced with `if (!::Hooks.hasMod(id)) continue;` before the getMod call.
 
 Combined effect of the two bugs: the `Hooks.queue(">mod_ROTUC", ...)` function threw during checkDeps, skipping scenario registration. Campaigns on 2.8.2 couldn't use the Golden Throne origin. 2.8.3 restores working load + correct drift-detection.

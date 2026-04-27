@@ -102,14 +102,20 @@ this.golden_ghost_dog_ally <- this.inherit("scripts/entity/tactical/enemies/dire
 
 	function onDeath(_killer, _skill, _tile, _fatalityType)
 	{
-		// Suppress obituary entry — pattern from golden_knight_ally v2.7.2
+		// Suppress obituary entry — pattern from golden_knight_ally v2.7.2.
+		// addFallen is restored unconditionally (whether direwolf.onDeath
+		// throws or not). Downstream throws — direwolf or any mod hook of
+		// it (e.g. Legends 19.3.19 reading `_killer.Name` or `_skill.Name`
+		// when one of those tables is sparse) — are caught quietly so
+		// combat keeps running. Death animation + corpse spawn might be
+		// partial, but the engine doesn't hang.
+		local addFallenOriginal = ::World.Statistics.addFallen;
+		::World.Statistics.addFallen = function(...) { return; };
 		try {
-			local addFallenOriginal = ::World.Statistics.addFallen;
-			::World.Statistics.addFallen = function(...) { return; };
 			this.direwolf.onDeath(_killer, _skill, _tile, _fatalityType);
-			::World.Statistics.addFallen = addFallenOriginal;
 		} catch (e) {
-			this.direwolf.onDeath(_killer, _skill, _tile, _fatalityType);
+			::logWarning("[Spectral Hound] direwolf.onDeath threw (cosmetic): " + e);
 		}
+		::World.Statistics.addFallen = addFallenOriginal;
 	}
 });
