@@ -9,6 +9,20 @@ Newest first.
 
 ---
 
+## 2.9.8 — 2026-04-27
+
+**Bring Back outcome — last layer of phantom-field cleanup.**
+
+After v2.9.7 cleared `Const.CharacterRosterTier`, the next retest surfaced another non-existent slot — `m.IsNewCompanyBackground` — throwing the same way: Squirrel `=` on a slot the parent class doesn't have. Brother spawn aborted four times in the test log, never reaching the trait/aura/oath grants.
+
+Fix: deleted four phantom-suspect background fields all at once instead of patching them one-by-one — `IsCombatBackground`, `IsNewCompanyBackground`, `HireCost`, `DailyFoodCost`. None are referenced anywhere in vanilla, Legends, or the mod-stack — only `DailyCost` is verified working (used in 20+ Legends backgrounds). Defaults from the base class are fine for a quest-reward recruit; the explicit field-sets weren't doing anything useful.
+
+The full Bring Back chain (v2.9.6 + v2.9.7 + v2.9.8) should now run end-to-end on a fresh roll.
+
+**Save-compat:** none affected. Same caveat as v2.9.6/v2.9.7 — anyone who already rolled Bring Back has the `GoldenThronePartnerRestored` flag set and won't see the event re-fire on their save. Roll back to a save before the resolution event to retroactively benefit on v2.9.8.
+
+---
+
 ## 2.9.7 — 2026-04-27
 
 **Bring Back outcome — finishing the chain.**

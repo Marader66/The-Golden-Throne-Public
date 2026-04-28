@@ -14,11 +14,15 @@ this.golden_beloved_background <- ::inherit("scripts/skills/backgrounds/characte
 		// Kabu's 22:28 log: 7× `the index 'CharacterRosterTier' does not exist`
 		// at line 9 — blocked brother creation. Delete; background works fine
 		// without it.
-		this.m.IsCombatBackground = true;
-		this.m.IsNewCompanyBackground = false;
-		this.m.HireCost = 0;
+		// v2.9.8: deleted four more phantom-suspect fields — IsCombatBackground,
+		// IsNewCompanyBackground, HireCost, DailyFoodCost. None are referenced
+		// in vanilla / Legends / mod-stack background sources; only DailyCost is
+		// verified working (used in 20+ Legends backgrounds). Kabu's 22:55 log:
+		// 4× `the index 'IsNewCompanyBackground' does not exist` blocked brother
+		// creation. Same Squirrel `=` slot-doesn't-exist throw as the v2.5.0
+		// guesses we keep peeling off this background. Defaults from
+		// character_background.create() are fine for a quest-reward recruit.
 		this.m.DailyCost = 0;
-		this.m.DailyFoodCost = 2;
 
 		this.m.BackgroundStatModifiers = {
 			Hitpoints = 20,
