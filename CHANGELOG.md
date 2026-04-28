@@ -9,6 +9,22 @@ Newest first.
 
 ---
 
+## 2.9.6 — 2026-04-27
+
+**Partner Quest — Bring Back outcome now actually grants the new beloved + their sword.**
+
+The Bring Back outcome of the partner quest reckoning was silently failing to add the new beloved brother to your roster. Each roll that landed on Bring Back logged a warning and quietly dropped the grant — the dialog showed the lore screen and you could click "Come home", but no brother appeared, and Dawn's Edge never made it into your inventory.
+
+Root cause: a method that doesn't exist in Battle Brothers (`hireBrother`) was being called on the wrong object (the party wrapper, not the roster). Both bugs lived together in the same line of code since v2.5.0; only surfaced now because nobody had rolled a Bring Back outcome in playtest before.
+
+Fix: rewrote the grant with the canonical hire path used by Battle Brothers' own recruit events. The new beloved is now correctly created with the `golden_beloved_background`, named after your fallen partner (Valeria of the Dawn Court for a male Emperor, Aldric the Oathsworn for the Empress branch), levelled up via XP grants, and equipped with **Dawn's Edge** — the named partner sword that the original v2.5.0 design called for but never actually equipped in code.
+
+The background still auto-grants the_beloved_trait, beloved_presence_aura, Mandate tier 5 (Saint of the Throne), Light Oath, and Chosen tier 3 on top.
+
+**Save-compat:** none affected. Anyone who already saw Bring Back fail still has the `GoldenThronePartnerRestored` flag set, which means the event won't re-fire for them. If you want the brother retroactively, rolling back to a save before the resolution event fired and re-triggering on v2.9.6 is the cleanest fix. New campaigns get the corrected flow on first roll.
+
+---
+
 ## 2.9.5 — 2026-04-27
 
 **Pillar of Light — multi-kill performance.**

@@ -173,17 +173,42 @@ this.golden_partner_resolution_event <- this.inherit("scripts/events/event", {
 	}
 
 	function _grantBringBack() {
+		// v2.9.6: rewrote with canonical hire pattern. Original v2.5.0 code
+		// called `::World.State.getPlayer().hireBrother(...)` — both wrong:
+		// getPlayer() returns the world-state party wrapper (Table), not
+		// the roster, and `hireBrother` is a phantom method that doesn't
+		// exist in vanilla or Legends. Repro from Kabu's 2026-04-27 logs:
+		// 6× `[mod_golden_throne] bring_back grant partial: the index
+		// 'hireBrother' does not exist`. Brother never spawned; the
+		// catch silently swallowed each throw. Canonical pattern verified
+		// against ROTU's mod_rotu_recruit_event.nut and the Knight summon.
 		try {
-			local roster = ::World.State.getPlayer();
+			local roster = ::World.getPlayerRoster();
 			if (roster == null) return;
 
-			local bro = roster.hireBrother("scripts/skills/backgrounds/golden_beloved_background", false);
-			if (bro != null) {
-				bro.setName(this.m.PartnerName);
-				for (local i = 0; i < 14; i++) {
-					bro.addXP(2500, false);
-				}
+			local bro = roster.create("scripts/entity/tactical/player");
+			if (bro == null) return;
+			bro.setStartValuesEx(["golden_beloved_background"]);
+			bro.setName(this.m.PartnerName);
+
+			// 14 × 2500 XP = ~levels 1 -> ~13 (matches original v2.5.0 intent).
+			// Background's onAfterUpdate auto-grants the_beloved_trait,
+			// beloved_presence_aura, Mandate tier 5, Light Oath, Chosen tier 3.
+			for (local i = 0; i < 14; i++) {
+				bro.addXP(2500, false);
 			}
+
+			// Equip Dawn's Edge — named_partner_sword display name flips to
+			// "Dawn's Edge" because GoldenThronePartnerOutcome == "bring_back"
+			// (set in onPrepare before this method runs). Original v2.5.0
+			// missed this entirely; design doc had it in the reward column.
+			try {
+				bro.getItems().equip(::new("scripts/items/weapons/named/named_partner_sword"));
+			} catch (e) {
+				::logWarning("[mod_golden_throne] bring_back sword-equip partial: " + e);
+			}
+
+			roster.add(bro);
 		} catch (e) {
 			::logWarning("[mod_golden_throne] bring_back grant partial: " + e);
 		}
