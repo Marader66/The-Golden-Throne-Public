@@ -9,23 +9,14 @@ this.golden_partner_resolution_event <- this.inherit("scripts/events/event", {
 		this.m.Title = "The Crypt's Silence";
 		this.m.Cooldown = 9999.0 * ::World.getTime().SecondsPerDay;
 
-		this.m.Screens.push({
-			ID = "ROUTER",
-			Text = "{...}",
-			Image = "", Banner = "", List = [], Characters = [],
-			Options = [{
-				Text = "",
-				function getResult(_event) {
-					switch (_event.m.Outcome) {
-						case "bring_back": return "BRING_BACK";
-						case "put_to_rest": return "PUT_TO_REST";
-						case "shade": return "SHADE";
-					}
-					return 0;
-				}
-			}],
-			function start(_event) {}
-		});
+		// No "ROUTER" / "A" entry-point screen — the event jumps directly
+		// to one of the three outcome screens via onDetermineStartScreen.
+		// (v2.9.4: vanilla onDetermineStartScreen returns "A", but our
+		// outcome screen IDs are BRING_BACK / PUT_TO_REST / SHADE — no
+		// "A" existed, getScreen("A") returned null, setScreen(null) was
+		// a no-op, ActiveScreen stayed null/stale, and the render loop
+		// threw "the index 'Text' does not exist" every frame. Fix is
+		// the override below; ROUTER screen removed since it's bypassed.)
 
 		this.m.Screens.push({
 			ID = "BRING_BACK",
@@ -115,6 +106,15 @@ this.golden_partner_resolution_event <- this.inherit("scripts/events/event", {
 				screen.Text = ::MSU.String.replace(screen.Text, "%partnername%", this.m.PartnerName);
 			}
 		}
+	}
+
+	function onDetermineStartScreen() {
+		switch (this.m.Outcome) {
+			case "bring_back": return "BRING_BACK";
+			case "put_to_rest": return "PUT_TO_REST";
+			case "shade":       return "SHADE";
+		}
+		return "BRING_BACK"; // safety fallback if Outcome got dropped somehow
 	}
 
 	function _rollOutcome() {

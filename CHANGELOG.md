@@ -9,6 +9,36 @@ Newest first.
 
 ---
 
+## 2.9.5 — 2026-04-27
+
+**Pillar of Light — multi-kill performance.**
+
+When Pillar kills four or more enemies in one cast, the post-cast delay is noticeably shorter. Three changes inside `onUse`:
+
+1. Combat log collapses many per-target lines into a single summary line for casts that hit 4+ targets. 1-3 targets still keep their individual lines for the lore-friendly read.
+2. Particle render cost roughly halved — `HolyFlameParticles[0]` quantity dropped from 50% to 25% of the vanilla baseline. Visual is still recognizable as a holy-flame burst.
+3. Repeated downstream-hook warnings (the kind that fire when a third-party combat-text mod throws on a dying enemy mid-AoE) are now deduplicated to one warning per cast instead of one per dying entity. Saves disk-sync chunks if such a mod is loaded.
+
+Pair with Battle Brothers' built-in **Combat Animation Speed** slider (Options → Game) at max for the full benefit on big AoE casts. Death animation pacing itself is engine-level and can't be sped up from a mod.
+
+**Save-compat:** none affected (runtime behavior only, no serialize changes).
+
+---
+
+## 2.9.4 — 2026-04-27
+
+**Partner Quest — Beat 4 resolution screen no longer freezes.**
+
+When the partner quest reached its outcome reckoning, the world dialog was opening with no displayable screen and locking the player out of clicking through. The render loop threw an event-rendering exception once per frame for as long as the dialog was up.
+
+Root cause: the resolution event wasn't telling Battle Brothers which screen to start on, so the engine fell back to its default starting screen ID (`"A"`), which the resolution event doesn't define. The dialog then attempted to render a screen that didn't exist.
+
+Fix: the resolution event now picks its starting screen explicitly from the rolled outcome — Bring Back, Put to Rest, or Shade — and jumps straight to it. The intermediate router screen is removed since it's no longer reachable.
+
+**Save-compat:** none affected. Anyone whose campaign predates the original partner quest won't see this fix because they don't have the broken event in their save state. New and recent campaigns get the corrected flow on next load.
+
+---
+
 ## 2.9.3 — 2026-04-26
 
 **Hotfix — Spectral Hound death crash on Legends 19.3.19 (or any direwolf-onDeath hook reading a sparse `_killer` / `_skill`).**

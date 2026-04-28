@@ -1,6 +1,6 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "2.9.2",
+	Version = "2.9.5",
 	Name = "The Golden Throne — Lewd Edition"
 };
 
@@ -11,7 +11,7 @@
 ::GoldenThrone.Deps <- {
 	Required = {
 		mod_legends      = "19.3.17",
-		mod_ROTUC        = "2.1.2",
+		mod_ROTUC        = "3.0.2",
 		mod_msu          = "1.2.7",
 		mod_modern_hooks = "0.4.0"
 	},

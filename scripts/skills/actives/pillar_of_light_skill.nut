@@ -64,14 +64,17 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 	}
 
 	function onUse(_user, _targetTile) {
+		// v2.9.5 (C): particle quantity reduced from 50% to 25% of vanilla
+		// HolyFlameParticles[0] for AoE perf. Visual is still recognizable
+		// as a holy-flame burst, just briefer.
 		local particles = ::Const.Tactical.HolyFlameParticles;
 		if (particles.len() > 0) {
 			local p = particles[0];
 			::Tactical.spawnParticleEffect(
 				false, p.Brushes, _targetTile,
 				p.Delay,
-				::Math.max(1, p.Quantity * 0.5),
-				::Math.max(1, p.LifeTimeQuantity * 0.5),
+				::Math.max(1, p.Quantity * 0.25),
+				::Math.max(1, p.LifeTimeQuantity * 0.25),
 				p.SpawnRate,
 				p.Stages
 			);
@@ -94,6 +97,14 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 			}
 		}
 
+		// v2.9.5 (B): aggregate per-target log lines into a single summary
+		// when more than 3 targets are hit. 1-3 targets keep individual
+		// lore-friendly lines; 4+ collapse to one summary line to reduce
+		// UI scroll churn. Same buckets used for the warning dedupe (D).
+		local hitNames = [];
+		local totalDamage = 0;
+		local hookThrowFired = false; // (D) one warning per cast, not per entity
+
 		foreach (enemy in targets) {
 			if (_user.isAlliedWith(enemy)) continue;
 			local dmg = ::Math.rand(35, 65);
@@ -107,21 +118,34 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 			hitInfo.BodyPart = ::Const.BodyPart.Body;
 			hitInfo.BodyDamageMult = 1.0;
 			hitInfo.FatalityChanceMult = 1.0;
-			// v2.9.2: wrap onDamageReceived in try/catch. Third-party
-			// onDamageReceived hooks (e.g. Floating Combat Text mods) can
-			// throw on dying entities mid-removal during AoE chains —
-			// crashes BB Core. Public bug report 2026-04-25 (zalew):
-			// mod_floating_combat_text_separate_damage's hook crashed
-			// at line 46 when the second of two webknechts died from a
-			// single Pillar cast. Damage already applied; the throw is
-			// downstream cosmetic-hook noise. Swallow + log.
+			// v2.9.2 / v2.9.5 (D): wrap onDamageReceived in try/catch.
+			// Third-party onDamageReceived hooks (Floating Combat Text mods,
+			// etc.) can throw on dying entities mid-removal during AoE
+			// chains. Damage was already applied; the throw is downstream
+			// hook noise. v2.9.5 collapses the per-entity logWarning into
+			// a single per-cast warning to avoid disk-sync chunking when
+			// 6+ AoE targets all throw the same hook.
 			try {
 				enemy.onDamageReceived(_user, this, hitInfo);
 			} catch (e) {
-				::logWarning("[Pillar of Light] downstream onDamageReceived hook threw: " + e);
+				if (!hookThrowFired) {
+					::logWarning("[Pillar of Light] downstream onDamageReceived hook threw (suppressing further cast warnings): " + e);
+					hookThrowFired = true;
+				}
 			}
-			if (!_user.isHiddenToPlayer()) {
-				::Tactical.EventLog.log("[color=#FFD700]Pillar of Light[/color] scorches " + ::Const.UI.getColorizedEntityName(enemy) + " for [color=" + ::Const.UI.Color.NegativeValue + "]" + dmg + "[/color] damage.");
+
+			hitNames.push(::Const.UI.getColorizedEntityName(enemy));
+			totalDamage += dmg;
+		}
+
+		// v2.9.5 (A/B): single summary for 4+ hits, individual lines for 1-3.
+		if (!_user.isHiddenToPlayer() && hitNames.len() > 0) {
+			if (hitNames.len() >= 4) {
+				::Tactical.EventLog.log("[color=#FFD700]Pillar of Light[/color] scorches " + hitNames.len() + " enemies for [color=" + ::Const.UI.Color.NegativeValue + "]" + totalDamage + "[/color] total damage.");
+			} else {
+				for (local i = 0; i < hitNames.len(); i++) {
+					::Tactical.EventLog.log("[color=#FFD700]Pillar of Light[/color] scorches " + hitNames[i] + ".");
+				}
 			}
 		}
 
