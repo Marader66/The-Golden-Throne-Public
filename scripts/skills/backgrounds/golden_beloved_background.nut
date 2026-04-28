@@ -6,7 +6,14 @@ this.golden_beloved_background <- ::inherit("scripts/skills/backgrounds/characte
 		this.m.ID = "background.golden_beloved";
 		this.m.BackgroundDescription = "Once lost, now returned. Your beloved from the old empire stands with you again — the bond that bound you in life proved stronger than the grave.";
 
-		this.m.RosterTier = this.Const.CharacterRosterTier.Legendary;
+		// v2.9.7: removed `this.m.RosterTier = this.Const.CharacterRosterTier.Legendary;`
+		// — `Const.CharacterRosterTier` is phantom (doesn't exist in vanilla,
+		// Legends, or anywhere). Background API doesn't have a RosterTier
+		// field anyway. Guess from v2.5.0 that never resolved because the
+		// background was never instantiated until v2.9.6 fixed _grantBringBack.
+		// Kabu's 22:28 log: 7× `the index 'CharacterRosterTier' does not exist`
+		// at line 9 — blocked brother creation. Delete; background works fine
+		// without it.
 		this.m.IsCombatBackground = true;
 		this.m.IsNewCompanyBackground = false;
 		this.m.HireCost = 0;

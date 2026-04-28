@@ -9,6 +9,20 @@ Newest first.
 
 ---
 
+## 2.9.7 — 2026-04-27
+
+**Bring Back outcome — finishing the chain.**
+
+v2.9.6 fixed the canonical hire path. v2.9.7 fixes the next bug downstream: the new beloved's background was failing to create because of a phantom constant reference (`Const.CharacterRosterTier`, which doesn't exist in the game). The brother spawn aborted before any of the trait/aura/oath grants could run.
+
+Fix: deleted the phantom line. Background works fine without it — `RosterTier` isn't actually a field on character backgrounds.
+
+Together v2.9.6 + v2.9.7 now make the Bring Back outcome actually functional end-to-end: brother spawns, gets named after your fallen partner, equipped with Dawn's Edge, granted Mandate tier 5 / Light Oath / Chosen tier 3 / the_beloved_trait + aura.
+
+**Save-compat:** none affected. Same caveat as v2.9.6 — anyone who rolled Bring Back on v2.9.5 or earlier still has the GoldenThronePartnerRestored flag set, so the event won't re-fire on their save. Roll back to a save before the resolution event to retroactively get the brother on v2.9.7.
+
+---
+
 ## 2.9.6 — 2026-04-27
 
 **Partner Quest — Bring Back outcome now actually grants the new beloved + their sword.**
