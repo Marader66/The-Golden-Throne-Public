@@ -9,6 +9,20 @@ Newest first.
 
 ---
 
+## 2.9.9 — 2026-04-28
+
+**Bring Back outcome — final phantom-field cleanup (caught by audit, not by playtest).**
+
+A cross-mod audit pass surfaced a fifth phantom field on the same beloved background — `BackgroundStatModifiers`. Same Squirrel slot-doesn't-exist throw pattern as the previous four (CharacterRosterTier in v2.9.7; IsCombatBackground / IsNewCompanyBackground / HireCost / DailyFoodCost in v2.9.8). Caught and patched before next retest, so the chain isn't going to throw on this one.
+
+The_beloved_trait's `onUpdate` already grants the meaningful stat bonuses (+25 Resolve, +5 Melee Skill, +10 Melee/Ranged Defense, route immunity), so the deleted block was both broken and redundant.
+
+Combined v2.9.6 → v2.9.7 → v2.9.8 → v2.9.9 should now make the Bring Back outcome run end-to-end with no phantom-field throws anywhere in the brother-creation chain.
+
+**Save-compat:** none affected. Same caveat as v2.9.6+ — anyone who already rolled Bring Back has the `GoldenThronePartnerRestored` flag set and won't see the event re-fire on their save. Roll back to a save before the resolution event to retroactively benefit on v2.9.9.
+
+---
+
 ## 2.9.8 — 2026-04-27
 
 **Bring Back outcome — last layer of phantom-field cleanup.**

@@ -24,24 +24,14 @@ this.golden_beloved_background <- ::inherit("scripts/skills/backgrounds/characte
 		// character_background.create() are fine for a quest-reward recruit.
 		this.m.DailyCost = 0;
 
-		this.m.BackgroundStatModifiers = {
-			Hitpoints = 20,
-			Bravery = 20,
-			Stamina = 10,
-			MeleeSkill = 15,
-			RangedSkill = -10,
-			MeleeDefense = 12,
-			RangedDefense = 5,
-			Initiative = 0,
-			FatigueRecoveryRate = 0,
-			Vision = 0,
-			MeleeSkillTalent = 2,
-			RangedSkillTalent = 0,
-			HitpointsTalent = 2,
-			BraveryTalent = 2,
-			FatigueTalent = 1,
-			MeleeDefenseTalent = 2
-		};
+		// v2.9.9: deleted `this.m.BackgroundStatModifiers = {...}` block —
+		// fifth phantom on this same file. The slot doesn't exist on
+		// character_background; same Squirrel `=` slot-doesn't-exist throw
+		// pattern as the previous four (RosterTier, IsCombatBackground,
+		// IsNewCompanyBackground, HireCost, DailyFoodCost). The_beloved_trait's
+		// onUpdate already grants the meaningful stat bonuses (+25 Resolve,
+		// +5 MS, +10 MD/RD) so this block was redundant AND broken. Caught
+		// during the 2026-04-28 cross-mod audit pass before Kabu retest.
 
 		this.m.Modifiers = { Ammo = 0, Meds = 0, Stash = 0, Tools = 0 };
 
