@@ -8,7 +8,7 @@ this.beloved_presence_aura <- ::inherit("scripts/skills/aura/rotu_mod_aura_abstr
 		m.Description = "The old-world bond endures. The Emperor fights with renewed purpose when his beloved stands near; lesser warriors, too, take heart from a face they thought lost to time.";
 		m.ToggleOnDescription = m.Description;
 		m.ToggleOffDescription = m.Description;
-		m.Icon = "skills/active_128.png";
+		m.Icon = "ui/perks/gt_beloved_presence.png";
 		m.IconMini = "status_effect_01_mini";
 		m.Overlay = "active_128";
 		m.SoundOnUse = ["sounds/combat/pov_holy_fire_01.wav"];

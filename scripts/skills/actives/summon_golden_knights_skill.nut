@@ -7,7 +7,7 @@ this.summon_golden_knights_skill <- this.inherit("scripts/skills/skill", {
 		this.m.ID = "actives.summon_golden_knights";
 		this.m.Name = "Summon Knights";
 		this.m.Description = "The Emperor raises his sword and calls upon the divine compact. Two golden knights materialise from light itself, each bearing a different blessing of battle.";
-		this.m.Icon = "skills/active_128.png";
+		this.m.Icon = "ui/perks/favoured_knight_01.png";
 		this.m.IconDisabled = "skills/active_128.png";
 		this.m.Overlay = "active_128";
 		this.m.SoundOnUse = [

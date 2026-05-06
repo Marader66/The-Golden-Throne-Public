@@ -4,7 +4,7 @@ this.the_beloved_trait <- ::inherit("scripts/skills/traits/character_trait", {
 	function create() {
 		this.character_trait.create();
 		this.m.ID = "trait.the_beloved";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_the_beloved.png";
 	}
 
 	function getName() {

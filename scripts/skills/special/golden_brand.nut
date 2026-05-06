@@ -1,5 +1,18 @@
+// golden_brand — Holy Wrath + Martyr's Fury + Sacred Smite for the Brand bearer.
+//
+// v2.11.3: Wrath stacks moved to Stack Skills lib (::StackLib). Stack id is
+// "goldenthrone.holywrath" registered in mod_golden_throne.nut. Lib handles
+// the cap (max 5), the reset on combatStart/combatEnd, and storage. This
+// file just calls ::StackLib.add/get/consume.
+//
+// Soft-fallback: if StackLib isn't loaded, the helper functions degrade to
+// hand-rolled m.WrathStacks state (preserves behavior on installs that
+// dropped the lib).
+
 this.golden_brand <- ::inherit("scripts/skills/skill", {
 	m = {
+		// Legacy field — kept for save-compat fallback when StackLib absent.
+		// Real source of truth in v2.11.3+ is ::StackLib.
 		WrathStacks = 0,
 		WrathStacksMax = 5,
 		SoundWrath = ["sounds/combat/pov_holy_fire_01.wav"]
@@ -8,7 +21,7 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 	function create() {
 		this.m.ID = "special.golden_brand";
 		this.m.Name = "The Golden Brand";
-		this.m.Icon = "skills/active_128.png";
+		this.m.Icon = "ui/perks/fire_circle.png";
 		this.m.IconMini = "status_effect_01_mini";
 		this.m.Type = ::Const.SkillType.Special | ::Const.SkillType.StatusEffect;
 		this.m.IsActive = false;
@@ -19,8 +32,41 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		return "The Emperor's mark burns in this brother's chest. It does not heal him — it enrages him. Every wound feeds the fire. Every fallen comrade feeds it further. The Brand demands one thing in return for its gifts: that the bearer strike back harder than he was struck.";
 	}
 
+	// ── Internal: read/write/consume Wrath, with StackLib-or-legacy fallback ──
+
+	function getWrath() {
+		local actor = this.getContainer().getActor();
+		if (actor == null) return this.m.WrathStacks;
+		if ("StackLib" in ::getroottable()) {
+			try { return ::StackLib.get(actor, "goldenthrone.holywrath"); } catch (e) {}
+		}
+		return this.m.WrathStacks;
+	}
+
+	function addWrath(_n) {
+		local actor = this.getContainer().getActor();
+		if (actor == null) return this.m.WrathStacks;
+		if ("StackLib" in ::getroottable()) {
+			try { return ::StackLib.add(actor, "goldenthrone.holywrath", _n); } catch (e) {}
+		}
+		// Legacy fallback — same logic as pre-2.11.3
+		this.m.WrathStacks = ::Math.min(this.m.WrathStacksMax, this.m.WrathStacks + _n);
+		return this.m.WrathStacks;
+	}
+
+	function consumeWrath() {
+		local actor = this.getContainer().getActor();
+		if (actor == null) return this.m.WrathStacks;
+		if ("StackLib" in ::getroottable()) {
+			try { return ::StackLib.consume(actor, "goldenthrone.holywrath"); } catch (e) {}
+		}
+		local prev = this.m.WrathStacks;
+		this.m.WrathStacks = 0;
+		return prev;
+	}
+
 	function getTooltip() {
-		local wrath = this.m.WrathStacks;
+		local wrath = this.getWrath();
 		return [
 			{ id=1, type="title", text = this.getName() },
 			{ id=2, type="description", text = this.getDescription() },
@@ -50,9 +96,10 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		_properties.HitpointsMult *= 1.3;
 		_properties.FatigueEffectMult *= 0.8;
 
-		if (this.m.WrathStacks > 0) {
-			_properties.MeleeSkill += this.m.WrathStacks * 3;
-			_properties.DamageTotalMult *= 1.0 + (this.m.WrathStacks * 0.03);
+		local wrath = this.getWrath();
+		if (wrath > 0) {
+			_properties.MeleeSkill += wrath * 3;
+			_properties.DamageTotalMult *= 1.0 + (wrath * 0.03);
 		}
 
 		this.updateVisuals();
@@ -75,13 +122,13 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		if (::MSU.isNull(_attacker)) return;
 		if (this.getContainer().getActor().isAlliedWith(_attacker)) return;
 
-		local prev = this.m.WrathStacks;
-		this.m.WrathStacks = ::Math.min(this.m.WrathStacksMax, this.m.WrathStacks + 1);
+		local prev = this.getWrath();
+		local now  = this.addWrath(1);
 
-		if (this.m.WrathStacks > prev) {
+		if (now > prev) {
 			local actor = this.getContainer().getActor();
 			if (!actor.isHiddenToPlayer()) {
-				this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " — Holy Wrath: " + this.m.WrathStacks + "/" + this.m.WrathStacksMax + "[/color]");
+				this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " — Holy Wrath: " + now + "/" + this.m.WrathStacksMax + "[/color]");
 			}
 		}
 	}
@@ -92,15 +139,16 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		if (!actor.isPlacedOnMap() || !_ally.isPlacedOnMap()) return;
 		if (actor.getTile().getDistanceTo(_ally.getTile()) > 5) return;
 
-		local gained = ::Math.min(this.m.WrathStacksMax - this.m.WrathStacks, 3);
+		local cur = this.getWrath();
+		local gained = ::Math.min(this.m.WrathStacksMax - cur, 3);
 		if (gained <= 0) return;
 
-		this.m.WrathStacks += gained;
+		local now = this.addWrath(gained);
 		if (!actor.isHiddenToPlayer()) {
 			if (this.m.SoundWrath.len() > 0) {
 				this.Sound.play(this.m.SoundWrath[0], this.Const.Sound.Volume.RacialEffect, actor.getPos());
 			}
-			this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " — Martyr's Fury ignites! Wrath: " + this.m.WrathStacks + "/" + this.m.WrathStacksMax + "[/color]");
+			this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " — Martyr's Fury ignites! Wrath: " + now + "/" + this.m.WrathStacksMax + "[/color]");
 		}
 	}
 
@@ -110,12 +158,13 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		if (_damageInflictedHitpoints <= 0 && _damageInflictedArmor <= 0) return;
 
 		local actor = this.getContainer().getActor();
+		local wrath = this.getWrath();
 
-		if (this.m.WrathStacks > 0) {
+		if (wrath > 0) {
 			if (!actor.isHiddenToPlayer()) {
-				this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " releases Holy Wrath (" + this.m.WrathStacks + " stacks)![/color]");
+				this.Tactical.EventLog.log("[color=#FFD700]" + this.Const.UI.getColorizedEntityName(actor) + " releases Holy Wrath (" + wrath + " stacks)![/color]");
 			}
-			this.m.WrathStacks = 0;
+			this.consumeWrath();
 		}
 
 		local weapon = actor.getItems().getItemAtSlot(::Const.ItemSlot.Mainhand);
@@ -162,6 +211,9 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 	}
 
 	function onAdded() { this.updateVisuals(); }
+
+	// v2.11.3: combat-start/finish reset is now handled by StackLib's combat_hooks.
+	// We keep the legacy m.WrathStacks reset for fallback-mode installs.
 	function onCombatStarted() { this.updateVisuals(); this.m.WrathStacks = 0; }
 	function onCombatFinished() { this.m.WrathStacks = 0; }
 
@@ -172,6 +224,9 @@ this.golden_brand <- ::inherit("scripts/skills/skill", {
 		actor.getItems().updateAppearance();
 	}
 
+	// Save-compat: keep the i32 slot for m.WrathStacks. Existing campaigns
+	// have it serialized; removing it would break save reads. v2.12+ can
+	// drop the slot once we cycle through enough campaigns.
 	function onSerialize(_out) {
 		this.skill.onSerialize(_out);
 		_out.writeI32(this.m.WrathStacks);

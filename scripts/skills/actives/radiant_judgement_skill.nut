@@ -8,7 +8,7 @@ this.radiant_judgement_skill <- this.inherit("scripts/skills/skill", {
 		this.m.ID = "actives.radiant_judgement";
 		this.m.Name = "Radiant Judgement";
 		this.m.Description = "A verdict delivered in gold. The Emperor's gaze marks the target, and holy fire answers — piercing steel, scouring flesh, unmaking the unclean.";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/lightning_circle.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
 		this.m.SoundOnUse = ["sounds/combat/pov_holy_fire_03.wav"];
@@ -28,22 +28,19 @@ this.radiant_judgement_skill <- this.inherit("scripts/skills/skill", {
 
 	function getTooltip() {
 		local ret = this.getDefaultTooltip();
-		ret.push({
-			id = 10, type = "text", icon = "ui/icons/damage_dealt.png",
-			text = "[color=" + ::Const.UI.Color.PositiveValue + "]60-110[/color] holy damage."
-		});
-		ret.push({
-			id = 11, type = "text", icon = "ui/icons/special.png",
-			text = "Ignores armor entirely."
-		});
-		ret.push({
-			id = 12, type = "text", icon = "ui/icons/special.png",
-			text = "Deals [color=" + ::Const.UI.Color.PositiveValue + "]double damage[/color] against undead, beasts, or monstrous targets."
-		});
-		ret.push({
-			id = 13, type = "text", icon = "ui/icons/special.png",
-			text = "Cooldown: " + this.m.CooldownMax + " turns (" + ::Math.max(0, this.m.Cooldown) + " remaining)."
-		});
+		local pos = ::Const.UI.Color.PositiveValue;
+		local neg = ::Const.UI.Color.NegativeValue;
+
+		ret.push({ id = 10, type = "text", icon = "ui/icons/damage_dealt.png",
+			text = "[color=" + pos + "]60–110[/color] holy fire damage to a single target." });
+		ret.push({ id = 11, type = "text", icon = "ui/icons/special.png",
+			text = "[color=" + pos + "]Double damage[/color] vs. [color=" + pos + "]undead[/color], [color=" + pos + "]beasts[/color], or [color=" + pos + "]monstrous[/color] targets." });
+		ret.push({ id = 12, type = "text", icon = "ui/icons/special.png",
+			text = "Damage type: [color=" + pos + "]Burning[/color] — bypasses armor and Cutting/Piercing-resistant enemies." });
+		ret.push({ id = 13, type = "text", icon = "ui/icons/special.png",
+			text = (this.m.Cooldown <= 0)
+				? "[color=" + pos + "]Ready[/color] — " + this.m.CooldownMax + "-turn cooldown after use."
+				: "[color=" + neg + "]Cooldown: " + this.m.Cooldown + " turn(s) remaining[/color]." });
 		return ret;
 	}
 
@@ -86,6 +83,7 @@ this.radiant_judgement_skill <- this.inherit("scripts/skills/skill", {
 		local hitInfo = clone ::Const.Tactical.HitInfo;
 		hitInfo.DamageRegular = dmg;
 		hitInfo.DamageDirect = 1.0;
+		hitInfo.DamageType = ::Const.Damage.DamageType.Burning;  // v2.14.0 — holy fire counts as Burning
 		hitInfo.BodyPart = ::Const.BodyPart.Body;
 		hitInfo.BodyDamageMult = 1.0;
 		hitInfo.FatalityChanceMult = 1.0;

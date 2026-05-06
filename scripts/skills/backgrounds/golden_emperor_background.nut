@@ -166,18 +166,34 @@ this.golden_emperor_background <- ::inherit("scripts/skills/backgrounds/characte
 	}
 
 	function onAdded() {
-		if (m.IsNew) {
-			getContainer().add(::new("scripts/skills/traits/player_character_trait"));
-			getContainer().add(::new("scripts/skills/traits/iron_lungs_trait"));
-			getContainer().add(::new("scripts/skills/traits/golden_emperor_trait"));
-			getContainer().add(::new("scripts/skills/aura/golden_emperor_aura"));
-			getContainer().add(::new("scripts/skills/actives/summon_golden_knights_skill"));
-			getContainer().getActor().getFlags().set("IsPlayerCharacter", true);
-			getContainer().getActor().getFlags().set("GoldenEmperor", true);
+		// v2.14.5 — replaced fragile `if (m.IsNew)` gate with per-skill
+		// idempotent checks. The IsNew gate failed in some 3M scenario
+		// flows (Emperor spawned without the aura — user report 2026-05-02).
+		// Per-skill existence check is bulletproof: adds what's missing,
+		// skips what's present. Safe to fire on save-load reconstruction
+		// or any double-add path.
+		local container = getContainer();
+		if (container == null) return;
+		local skills = container;
+		local addIfMissing = function (_id, _path) {
+			if (skills.getSkillByID(_id) == null) {
+				try { skills.add(::new(_path)); } catch (e) {
+					::logWarning("[golden_throne] bg.onAdded add failed (" + _path + "): " + e);
+				}
+			}
+		};
+		addIfMissing("trait.player_character",        "scripts/skills/traits/player_character_trait");
+		addIfMissing("trait.iron_lungs",              "scripts/skills/traits/iron_lungs_trait");
+		addIfMissing("trait.golden_emperor",          "scripts/skills/traits/golden_emperor_trait");
+		addIfMissing("actives.golden_emperor_aura",   "scripts/skills/aura/golden_emperor_aura");
+		addIfMissing("actives.summon_golden_knights", "scripts/skills/actives/summon_golden_knights_skill");
+		local actor = container.getActor();
+		if (actor != null) {
+			actor.getFlags().set("IsPlayerCharacter", true);
+			actor.getFlags().set("GoldenEmperor", true);
+			actor.getFlags().set("IsRotuBackground", true);
 		}
 		character_background.onAdded();
-		local actor = this.getContainer().getActor().get();
-		actor.getFlags().set("IsRotuBackground", true);
 	}
 
 	function onAddEquipment() {}

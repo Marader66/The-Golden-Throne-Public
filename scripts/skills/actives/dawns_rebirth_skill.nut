@@ -6,7 +6,7 @@ this.dawns_rebirth_skill <- this.inherit("scripts/skills/skill", {
 	function create() {
 		this.m.ID = "actives.dawns_rebirth";
 		this.m.Name = "Dawn's Rebirth";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/holybluefire_circle.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
 		this.m.Description = "The Emperor opens the morning. Every soul sworn to his banner stirs back to strength within sight of his light.";
@@ -15,20 +15,21 @@ this.dawns_rebirth_skill <- this.inherit("scripts/skills/skill", {
 		this.m.Type = ::Const.SkillType.Active;
 		this.m.Order = ::Const.SkillOrder.UtilityTargeted;
 		this.m.IsActive = true;
-		this.m.IsTargeted = false;
+		this.m.IsTargeted = true;
+		this.m.IsTargetingActor = true;
 		this.m.IsStacking = false;
 		this.m.IsAttack = false;
 		this.m.ActionPointCost = 6;
 		this.m.FatigueCost = 30;
 		this.m.MinRange = 0;
-		this.m.MaxRange = 0;
+		this.m.MaxRange = 2;
 	}
 
 	function getTooltip() {
 		local ret = this.getDefaultTooltip();
 		ret.push({
 			id = 10, type = "text", icon = "ui/icons/health.png",
-			text = "Heals every ally within [color=" + ::Const.UI.Color.PositiveValue + "]15[/color] tiles for [color=" + ::Const.UI.Color.PositiveValue + "]30%[/color] of their max HP."
+			text = "Heals every ally within [color=" + ::Const.UI.Color.PositiveValue + "]6[/color] tiles of the chosen ally for [color=" + ::Const.UI.Color.PositiveValue + "]30%[/color] of their max HP."
 		});
 		ret.push({
 			id = 11, type = "text", icon = "ui/icons/special.png",
@@ -50,13 +51,19 @@ this.dawns_rebirth_skill <- this.inherit("scripts/skills/skill", {
 		return true;
 	}
 
+	function onVerifyTarget(_originTile, _targetTile) {
+		if (!_targetTile.IsOccupiedByActor) return false;
+		local user = this.getContainer().getActor();
+		return user.isAlliedWith(_targetTile.getEntity());
+	}
+
 	function onUse(_user, _targetTile) {
-		local userTile = _user.getTile();
+		local centerTile = _targetTile.IsOccupiedByActor ? _targetTile : _user.getTile();
 
 		local particles = ::Const.Tactical.HolyFlameParticles;
 		for (local i = 0; i < particles.len(); i++) {
 			::Tactical.spawnParticleEffect(
-				false, particles[i].Brushes, userTile,
+				false, particles[i].Brushes, centerTile,
 				particles[i].Delay, particles[i].Quantity * 2,
 				particles[i].LifeTimeQuantity, particles[i].SpawnRate,
 				particles[i].Stages
@@ -68,7 +75,7 @@ this.dawns_rebirth_skill <- this.inherit("scripts/skills/skill", {
 			if (entity == null || !entity.isAlive() || entity.isDying()) continue;
 			if (!entity.isPlacedOnMap()) continue;
 			if (!_user.isAlliedWith(entity)) continue;
-			if (entity.getTile().getDistanceTo(userTile) > 15) continue;
+			if (entity.getTile().getDistanceTo(centerTile) > 6) continue;
 			local heal = ::Math.floor(entity.getHitpointsMax() * 0.3);
 			entity.setHitpoints(::Math.min(entity.getHitpointsMax(), entity.getHitpoints() + heal));
 			healed += 1;

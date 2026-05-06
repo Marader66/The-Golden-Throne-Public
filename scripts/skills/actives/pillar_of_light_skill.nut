@@ -8,7 +8,7 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 		this.m.ID = "actives.pillar_of_light";
 		this.m.Name = "Pillar of Light";
 		this.m.Description = "A shaft of divine fire descends on the target, scorching the ground around it. Undead, beasts, and monstrous creatures burn hotter.";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/holyfire_square.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
 		this.m.SoundOnUse = ["sounds/combat/pov_holy_fire_01.wav"];
@@ -29,22 +29,19 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 
 	function getTooltip() {
 		local ret = this.getDefaultTooltip();
-		ret.push({
-			id = 10, type = "text", icon = "ui/icons/damage_dealt.png",
-			text = "[color=" + ::Const.UI.Color.PositiveValue + "]35-65[/color] holy damage to all enemies in a 2-tile radius."
-		});
-		ret.push({
-			id = 11, type = "text", icon = "ui/icons/special.png",
-			text = "[color=" + ::Const.UI.Color.PositiveValue + "]+50%[/color] damage against undead, beasts, and monstrous enemies."
-		});
-		ret.push({
-			id = 12, type = "text", icon = "ui/icons/special.png",
-			text = "Ignores armor."
-		});
-		ret.push({
-			id = 13, type = "text", icon = "ui/icons/special.png",
-			text = "Cooldown: " + this.m.CooldownMax + " turns (" + ::Math.max(0, this.m.Cooldown) + " remaining)."
-		});
+		local pos = ::Const.UI.Color.PositiveValue;
+		local neg = ::Const.UI.Color.NegativeValue;
+
+		ret.push({ id = 10, type = "text", icon = "ui/icons/damage_dealt.png",
+			text = "[color=" + pos + "]35–65[/color] holy fire damage to every enemy in a [color=" + pos + "]2-tile radius[/color] of the target." });
+		ret.push({ id = 11, type = "text", icon = "ui/icons/special.png",
+			text = "[color=" + pos + "]+50%[/color] damage vs. [color=" + pos + "]undead[/color], [color=" + pos + "]beasts[/color], and [color=" + pos + "]monstrous[/color] enemies." });
+		ret.push({ id = 12, type = "text", icon = "ui/icons/special.png",
+			text = "Damage type: [color=" + pos + "]Burning[/color] — half lands on armor, half on health. Ignores Cutting/Piercing resistance." });
+		ret.push({ id = 13, type = "text", icon = "ui/icons/special.png",
+			text = (this.m.Cooldown <= 0)
+				? "[color=" + pos + "]Ready[/color] — " + this.m.CooldownMax + "-turn cooldown after use."
+				: "[color=" + neg + "]Cooldown: " + this.m.Cooldown + " turn(s) remaining[/color]." });
 		return ret;
 	}
 
@@ -114,7 +111,8 @@ this.pillar_of_light_skill <- this.inherit("scripts/skills/skill", {
 			}
 			local hitInfo = clone ::Const.Tactical.HitInfo;
 			hitInfo.DamageRegular = dmg;
-			hitInfo.DamageDirect = 1.0;
+			hitInfo.DamageDirect = 0.5;
+			hitInfo.DamageType = ::Const.Damage.DamageType.Burning;  // v2.14.0 — holy fire counts as Burning
 			hitInfo.BodyPart = ::Const.BodyPart.Body;
 			hitInfo.BodyDamageMult = 1.0;
 			hitInfo.FatalityChanceMult = 1.0;

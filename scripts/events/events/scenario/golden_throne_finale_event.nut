@@ -53,7 +53,7 @@ this.golden_throne_finale_event <- this.inherit("scripts/events/event", {
 		if (::World == null) return false;
 		local scenarioID = "";
 		try { scenarioID = ::World.Assets.getOrigin().getID(); } catch (e) { return false; }
-		if (scenarioID != "scenario.golden_throne") return false;
+		if (scenarioID != "scenario.golden_throne" && scenarioID != "scenario.three_musketeers") return false;
 		if (!::World.Flags.get("GoldenThroneUsurperDown")) return false;
 		if (::World.Flags.get("GoldenThroneFinaleShown")) return false;
 		local evil = ::World.FactionManager.m.GreaterEvil;
