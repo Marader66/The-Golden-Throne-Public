@@ -11,7 +11,7 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		character_trait.create();
 		m.ID = "trait.golden_emperor";
 		m.Name = "Undying Sovereign";
-		m.Icon = "ui/perks/holyfire_circle.png";
+		m.Icon = "ui/perks/gt_golden_emperor.png";
 		m.Description = "An ancient power stirs within. This warrior has cheated death before — and may do so once more. But the second death is final.";
 		m.Titles = ["the Undying", "the Golden", "the Sovereign"];
 		m.Type = m.Type | ::Const.SkillType.Trait;
@@ -77,8 +77,18 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 	function onUpdate(_properties) {
 		_properties.SurvivesAsUndead = false;
 
-		local actor = this.getContainer().getActor();
+		local container = this.getContainer();
+		if (container == null) return;
+		local actor = container.getActor();
 		if (actor == null) return;
+
+		// v2.14.5 — aura self-heal (synced from main). See main golden_emperor_trait.nut.
+		if (container.getSkillByID("actives.golden_emperor_aura") == null) {
+			try {
+				container.add(::new("scripts/skills/aura/golden_emperor_aura"));
+				::logInfo("[golden_throne] self-heal: re-added Imperial Presence aura to " + actor.getName());
+			} catch (e) { ::logWarning("[golden_throne] aura self-heal failed: " + e); }
+		}
 
 		local level = actor.getLevel();
 
@@ -93,9 +103,56 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		if (level > this.m.LastPowerUnlockLevel) {
 			this._unlockLevelPowers(actor, level);
 			this.m.LastPowerUnlockLevel = level;
+			this.onApplyAppearance();
 		}
 
 		this._reconcileLewdPerks(actor);
+	}
+
+	function onCombatStarted() {
+		this.onApplyAppearance();
+	}
+
+	function onAdded() {
+		this.onApplyAppearance();
+	}
+
+	function onApplyAppearance() {
+		local container = this.getContainer();
+		if (container == null) return;
+		local actor = container.getActor();
+		if (actor == null) return;
+		this._setEmperorGrowthScale(actor);
+		try { actor.setDirty(true); } catch (e) {}
+	}
+
+	function _setEmperorGrowthScale(_actor) {
+		// Linear scale ramp from 1.00 at level 0 to 1.35 at level 20.
+		// Capped at 1.35 thereafter — chosen as the sweet spot where the
+		// silhouette reads bigger but BB's pixel-art atlases don't get
+		// visibly chunky from upscaling. Higher caps (1.45-1.65) showed
+		// pixel-blockiness on the layered armor stack. 2026-04-28 final.
+		local lvl = ::Math.min(_actor.getLevel(), 20);
+		local mult = 1.0 + (lvl / 20.0) * 0.35;
+		local parts = [
+			"body", "head", "armor", "surcoat",
+			"armor_layer_chain", "armor_layer_plate", "armor_layer_tabbard",
+			"armor_layer_cloak", "armor_layer_cloak_front",
+			"armor_upgrade_back", "armor_upgrade_back_top", "armor_upgrade_front",
+			"helmet",
+			"helmet_helm", "helmet_helm_lower", "helmet_top", "helmet_top_lower",
+			"helmet_vanity", "helmet_vanity_2", "helmet_vanity_lower",
+			"hair", "beard", "beard_top",
+			"tattoo_body", "tattoo_head",
+			"injury", "injury_body",
+			"accessory", "accessory_special",
+			"quiver", "shaft"
+		];
+		foreach (part in parts) {
+			try {
+				if (_actor.hasSprite(part)) _actor.getSprite(part).Scale = mult;
+			} catch (e) {}
+		}
 	}
 
 	function _unlockLevelPowers(_actor, _level) {

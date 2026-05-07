@@ -103,6 +103,15 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 
 		items.equip(this.new("scripts/items/weapons/greatsword"));
 
+		// v3.0.4 — uniform sprite scale across every Emperor layer (body,
+		// armor, cloak, helmet, crown) so the cape sits proportional to
+		// the wider Muscular-body silhouette and the warrior-king reads
+		// visually larger. MSU-tunable via `EmperorScale` (default 1.15).
+		try {
+			local factor = ::GoldenThrone.getSetting("EmperorScale", 1.15);
+			::GoldenThrone.applyEmperorScale(emperor, factor);
+		} catch (e) {}
+
 		addScenarioPerk(emperor.getBackground(), ::Const.Perks.PerkDefs.BattleForged, 0);
 		addScenarioPerk(emperor.getBackground(), ::Const.Perks.PerkDefs.InspiringPresence, 1);
 		addScenarioPerk(emperor.getBackground(), ::Const.Perks.PerkDefs.SteelBrow, 2);

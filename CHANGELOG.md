@@ -9,6 +9,48 @@ Newest first.
 
 ---
 
+## 3.0.5 — 2026-05-07
+
+**Patch — silences the "Stack Skills lib not loaded" log warning for everyone, plus a visual tweak for the Emperor and a Lewd Edition crash backport.** Save-compatible with 3.0.x.
+
+### The log-warning fix
+
+The Holy Wrath stack-counter and Purge Meter persistent counter were registered through a shared library called `mod_lib_stack_skills` (`::StackLib`) added back in v2.11.3. The library is small (~250 lines) and stable, but it lived as a separate private zip — meaning every public Golden Throne user has been logging:
+
+```
+[GoldenThrone] Stack Skills lib not loaded — Holy Wrath + Purge Count falling back to legacy state
+```
+
+… on every campaign start. The legacy fallback path still worked (the trait files carry the older direct-state code), but the warning was noisy and the dep was hidden.
+
+**Fix:** the library is now embedded directly inside Golden Throne. No second zip to install, no missing-dep warning. A guard pattern (`if (!("StackLib" in ::getroottable())) { ... }`) means if a sibling mod (Cinderwatch v2.6.2+, future scenarios) also embeds the lib, only the first one to load defines the slot — no namespace collisions.
+
+End-user impact: install `zmod_golden_throne_3-0-5.zip` (or `_LEWD`), the warning goes away, and Holy Wrath / Purge use the full StackLib coordination layer instead of the legacy fallback.
+
+### Emperor sprite scale (new MSU setting)
+
+The Emperor's `Bodies.Muscular` body silhouette is wider than the cape sprites are sized for, so the cloak sat slightly tight on layered armor. v3.0.5 adds a uniform sprite-scale pass across all 19 sprite layers (body, head, armor, every armor sub-layer, helmet, every helmet sub-layer) so everything enlarges together and the Emperor reads visually larger and more imposing — no more cape mismatch.
+
+New MSU setting `EmperorScale` (default **1.15**, range 1.0–1.30 in 0.05 steps) lets you tune the multiplier in-game without rebuilding. 1.0 = vanilla scale; 1.15 = noticeably larger.
+
+The scale is reapplied on every BB sprite redraw (armor damage, equipment swap) so it doesn't reset mid-combat. Emperor-flag-gated, so other player-class actors are unaffected.
+
+### Lewd Edition crash backport
+
+The Lewd Edition's preload had drifted behind main and was missing the v3.0.2 (FatigueEffectiveMax fallback) and v3.0.3 (Vigilance 4-arg widening) fixes — meaning Lewd users would crash on the Vigilance oath in newer mod stacks. Both fixes are now in the Lewd preload alongside the embed.
+
+If you're on Lewd Edition, this is the same critical-priority install as v3.0.3 was for main.
+
+### Files
+
+- `scripts/!mods_preload/mod_golden_throne.nut` (embed block + 3.0.5 version)
+- `scripts/lib/stack_skills/stack_lib.nut` (NEW — embedded lib helper)
+- `scripts/lib/stack_skills/combat_hooks.nut` (NEW — embedded lib helper)
+- `scripts/scenarios/world/golden_throne_scenario.nut` (Emperor scale wired in)
+- `lewd-overlay/scripts/!mods_preload/mod_golden_throne.nut` (mirror embed + crash backports)
+
+---
+
 ## 3.0.3 — 2026-05-07
 
 **Patch — fixes a critical crash that triggered for any oath-bearing brother during multi-target combat.** High-priority install if you've been crashing during Pillar of Light AoEs or noticed log spam during normal combat.
@@ -486,5 +528,3 @@ Initial Golden Throne scenario release.
 ---
 
 Full git log for this mod: `git log --all -- 'zmod_golden_throne_*' 'zmod_golden_throne_lewd_overlay'`.
-Known-bug fixes + valid-constants reference: `../CLAUDE.md`.
-Current-version mod-specific spec: `./CLAUDE.md`.

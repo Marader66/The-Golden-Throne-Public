@@ -1,8 +1,44 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "3.0.3",
+	Version = "3.0.5",
 	Name = "The Golden Throne"
 };
+
+// ── Embedded StackLib ─────────────────────────────────────────────────
+// Stack Skills library lives inside this mod so end-users don't have to
+// install a second zip. Guarded — if any earlier-loaded sibling mod
+// (Cinderwatch, future scenarios) already defined ::StackLib, we skip
+// and reuse theirs. First mod to load wins; subsequent loads no-op.
+// Helper files at scripts/lib/stack_skills/ are content-identical across
+// mods so zip-merge collisions are safe.
+//
+// NOTE: this block must stay BELOW the ::GoldenThrone slot above — our
+// build script's Version-string regex grabs the FIRST `Version = "..."`
+// it sees in the preload, and we want it to land on GT's version, not
+// the embedded lib's.
+if (!("StackLib" in ::getroottable())) {
+	::StackLib <- {
+		ID      = "mod_lib_stack_skills",
+		Version = "0.1.2",
+		Name    = "Stack Skills Library",
+		Kind = {
+			Combat     = 0,
+			Persistent = 1
+		},
+		Defs = {},
+		CombatStore = {}
+	};
+	::StackLib.Hooks <- ::Hooks.register(
+		::StackLib.ID,
+		::StackLib.Version,
+		::StackLib.Name
+	);
+	::StackLib.Hooks.queue(">mod_msu", function () {
+		::include("scripts/lib/stack_skills/stack_lib");
+		::include("scripts/lib/stack_skills/combat_hooks");
+		::logInfo("[" + ::StackLib.ID + " v" + ::StackLib.Version + "] loaded (embedded).");
+	});
+}
 
 ::GoldenThrone.Hooks <- ::Hooks.register(::GoldenThrone.ID, ::GoldenThrone.Version, ::GoldenThrone.Name);
 
@@ -459,6 +495,13 @@
 	page.addRangeSetting("OathScaling", 1.0, 0.0, 2.0, 0.1,
 		"Oath Mandate-tier scaling",
 		"Multiplier on Mandate-tier oath bonuses. 0 = flat, 1 = default curve, 2 = doubled.");
+	// v3.0.4 — Emperor sprite scale. Uniform multiplier on every Emperor
+	// sprite layer (body, armor, cloak, helmet, crown). Keeps proportions
+	// clean across the layered-armor stack while making the origin
+	// visually larger / more imposing. 1.0 = vanilla.
+	page.addRangeSetting("EmperorScale", 1.15, 1.0, 1.3, 0.05,
+		"Emperor sprite scale",
+		"Uniform multiplier on every Emperor sprite layer. 1.0 = vanilla; 1.15 = noticeably larger and keeps the cape sitting proportional to the wider warrior-king silhouette.");
 	page.addBooleanSetting("VerboseLog", false,
 		"Verbose logging",
 		"Extra log lines for Purge milestones and oath transitions.");
@@ -485,6 +528,35 @@
 		::GoldenThrone.getSetting("PurgeT3", 250),
 		::GoldenThrone.getSetting("PurgeT4", 500)
 	];
+};
+
+// ── Emperor sprite scale (v3.0.4) ─────────────────────────────────────
+// Approach 2: uniform multiplier on every Emperor sprite layer so body,
+// armor, cloak, helmet, and crown all enlarge together and the cape stays
+// proportionally aligned with the wider Muscular-body silhouette. Mirrors
+// the 19-layer walk from golden_knight_ally.applyGoldenTint. Gated on
+// the GoldenEmperor flag so the helper is a no-op for any other actor.
+::GoldenThrone.EmperorScaleLayers <- [
+	"body", "head", "armor",
+	"armor_layer_chain", "armor_layer_plate", "armor_layer_tabbard",
+	"armor_layer_cloak", "armor_layer_cloak_front",
+	"armor_upgrade_back", "armor_upgrade_back_top", "armor_upgrade_front",
+	"helmet", "helmet_helm", "helmet_helm_lower",
+	"helmet_top", "helmet_top_lower",
+	"helmet_vanity", "helmet_vanity_2", "helmet_vanity_lower"
+];
+
+::GoldenThrone.applyEmperorScale <- function (_actor, _factor) {
+	if (_actor == null) return;
+	try {
+		if (!_actor.getFlags().get("GoldenEmperor")) return;
+	} catch (e) { return; }
+	foreach (id in ::GoldenThrone.EmperorScaleLayers) {
+		try {
+			if (_actor.hasSprite(id)) _actor.getSprite(id).Scale = _factor;
+		} catch (e) {}
+	}
+	try { _actor.setDirty(true); } catch (e) {}
 };
 
 // D4 Phase A pyramid spawn helper. Called from the rumor
@@ -1074,6 +1146,23 @@
 			Row      = 0
 		};
 	}
+
+	// v3.0.4 — re-apply Emperor sprite scale on every sprite redraw so
+	// armor-damage / injury / equipment-swap layer recomputes don't reset
+	// our scale values back to 1.0. Emperor-flag-gated inside the helper,
+	// so the hook fires for every player but only mutates Emperor sprites.
+	::mods_hookExactClass("entity/tactical/player", function (o) {
+		local origUpdateInjury = o.onUpdateInjuryLayer;
+		o.onUpdateInjuryLayer = function () {
+			origUpdateInjury.call(this);
+			try {
+				if (this.getFlags().get("GoldenEmperor")) {
+					local factor = ::GoldenThrone.getSetting("EmperorScale", 1.15);
+					::GoldenThrone.applyEmperorScale(this, factor);
+				}
+			} catch (e) {}
+		};
+	});
 
 	// Hook tactical combat start to roll + apply snow weather when GT scenario
 	::mods_hookExactClass("states/tactical_state", function (o) {
