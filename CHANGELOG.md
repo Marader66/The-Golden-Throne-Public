@@ -9,6 +9,30 @@ Newest first.
 
 ---
 
+## 3.0.2 — 2026-05-07
+
+**Patch — two defensive bug fixes from a friend's log triage.**
+
+### Cinderwatch wire-in no longer spams the log when Cinderwatch isn't installed
+
+The Golden Throne scenario has a **test wire-in** that adds a 5th brother (the Cinderwarden) to the starting party when Cinderwatch is also installed. The header comment said "Requires Cinderwatch loaded" but the code wrapped the spawn in try/catch only — so when Cinderwatch wasn't installed, the engine would log `Failed to load script file scripts/skills/backgrounds/cinderwarden_background` + a `buildDescription does not exist` cascade every campaign start. The exception was caught (the brother just didn't spawn), but the log filled with red.
+
+**Fix:** added an outer `if (!("Cinderwatch" in ::getroottable()))` gate. When Cinderwatch isn't present, you now get a single info-log line ("Cinderwatch not loaded — skipping Cinderwarden wire-in") and no error spam.
+
+This is the version most public-release players will hit, since Cinderwatch isn't on Nexus yet.
+
+### Vigilance oath (type 4) — defensive guard on `FatigueEffectiveMax`
+
+The Vigilance oath's `applyStats` block did `_properties.FatigueEffectiveMax += ...` without an `in` check. That property is Legends-extended; on certain property-eval paths (some skill tooltips, older Legends versions) the slot is missing and the assignment threw. The throw was caught by the oath dispatcher's try/catch, so the brother just didn't get the +10 max-fatigue (other Vigilance effects still applied). But it spammed the log every onUpdate tick.
+
+**Fix:** defensive in-check + fallback. If `FatigueEffectiveMax` exists, +=10×mult on it; else fall back to vanilla `Stamina` (raw max-fatigue, cap-effect equivalent on vanilla BB without Legends). Same gameplay delta; no more log spam.
+
+### Save-compat
+
+Both fixes are additive guards. New campaigns + existing saves run the cleaner code path automatically. Direct in-place upgrade from v3.0.1 / v3.0.0.
+
+---
+
 ## 3.0.1 — 2026-05-07
 
 **Patch — dependency declaration fix.**

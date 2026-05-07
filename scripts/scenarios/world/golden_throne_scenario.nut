@@ -156,7 +156,16 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		//   (2) Equipment wasn't applied; bro spawned bare-chested. Now mirrors
 		//       Cinderwatch's onSpawnAssets kit: gambeson + hauberk_full,
 		//       chain_hood + kettle_hat, billhook, brass_lantern_trinket.
-		try {
+		//
+		// v3.0.2 — gate on Cinderwatch presence. Previously the try/catch
+		// swallowed the throw but the engine still logged "Failed to load
+		// script file scripts/skills/backgrounds/cinderwarden_background"
+		// every campaign start for players who don't have Cinderwatch
+		// installed (which is most public-release players, since Cinderwatch
+		// isn't on Nexus yet). Skip cleanly with one info line instead.
+		if (!("Cinderwatch" in ::getroottable())) {
+			::logInfo("[GT-test] Cinderwatch not loaded — skipping Cinderwarden wire-in. The party spawns with the standard 4 brothers.");
+		} else try {
 			local cinderwarden = roster.create("scripts/entity/tactical/player");
 			cinderwarden.setStartValuesEx(["cinderwarden_background"]);
 			cinderwarden.getBackground().buildDescription(true);
