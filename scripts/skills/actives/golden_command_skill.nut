@@ -7,7 +7,7 @@ this.golden_command_skill <- this.inherit("scripts/skills/skill", {
 		this.m.ID = "actives.golden_command";
 		this.m.Name = "Golden Command";
 		this.m.Description = "The Emperor barks a word of divine authority. The chosen ally snaps to attention, ready to act anew.";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_golden_command.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
 		this.m.SoundOnUse = ["sounds/combat/pov_holy_fire_02.wav"];

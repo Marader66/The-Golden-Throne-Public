@@ -19,7 +19,7 @@ this.golden_mandate_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		this.character_trait.create();
 		this.m.ID = "trait.golden_mandate";
 		this.m.Name = "Divine Mandate";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_divine_mandate.png";
 		this.m.IconMini = "mini_fire_circle";
 		this.m.Description = "This brother serves under the Emperor's divine light. Through blood and battle the mandate grows stronger, burning away weakness and fear until only something radiant remains.";
 	}
@@ -119,8 +119,10 @@ this.golden_mandate_trait <- ::inherit("scripts/skills/traits/character_trait", 
 
 	function isInEmperorPresence() {
 		if (!::Tactical.isActive()) return false;
-		local actor = this.getContainer().getActor();
-		if (!actor.isPlacedOnMap()) return false;
+		local container = this.getContainer();
+		if (container == null) return false;
+		local actor = container.getActor();
+		if (actor == null || !actor.isPlacedOnMap()) return false;
 		foreach (entity in ::Tactical.Entities.getAllInstancesAsArray()) {
 			if (entity.getFlags().get("GoldenEmperor") && entity.isAlive() && entity.isPlacedOnMap()) {
 				if (actor.getTile().getDistanceTo(entity.getTile()) <= 10) {
@@ -147,7 +149,10 @@ this.golden_mandate_trait <- ::inherit("scripts/skills/traits/character_trait", 
 			_properties.MovementFatigueCostMult = 0.5;
 			_properties.Bravery *= 1.2;
 			_properties.InitiativeMult *= 1.2;
-			local actor = this.getContainer().getActor();
+			local container = this.getContainer();
+			if (container == null) return;
+			local actor = container.getActor();
+			if (actor == null) return;
 			local fat = actor.getItems().getStaminaModifier([::Const.ItemSlot.Body, ::Const.ItemSlot.Head]);
 			_properties.Stamina += this.Math.floor(actor.getFatigueMax() * 0.2) - fat * 0.2;
 			_properties.FatigueToInitiativeRate *= 0.8;
@@ -236,7 +241,10 @@ this.golden_mandate_trait <- ::inherit("scripts/skills/traits/character_trait", 
 	}
 
 	function onApplyAppearance() {
-		local actor = this.getContainer().getActor();
+		local container = this.getContainer();
+		if (container == null) return;
+		local actor = container.getActor();
+		if (actor == null) return;
 		local tier = this.getTierLevel();
 
 		if (tier >= 1 && actor.hasSprite("permanent_injury_4")) {
@@ -252,7 +260,40 @@ this.golden_mandate_trait <- ::inherit("scripts/skills/traits/character_trait", 
 			}
 			actor.setSpriteOffset("permanent_injury_4", this.createVec(0, -2.8));
 		}
+		this._setMandateGrowthScale(actor);
 		actor.setDirty(true);
+	}
+
+	function _setMandateGrowthScale(_actor) {
+		// Tier-IV Exalted = 1.15x, Tier-V Saint = 1.20x. Tiers 0-III stay at
+		// 1.0 (base human silhouette). Absolute set on each layer — never
+		// multiplicative, so onCombatStarted/onAdded reapply is idempotent.
+		// 31-layer list covers vanilla + Legends armor/helmet stack + body /
+		// head / hair / beard / tattoos / injuries / accessories.
+		local tier = this.getTierLevel();
+		local mult;
+		if (tier >= 5) mult = 1.20;
+		else if (tier >= 4) mult = 1.15;
+		else mult = 1.0;
+		local parts = [
+			"body", "head", "armor", "surcoat",
+			"armor_layer_chain", "armor_layer_plate", "armor_layer_tabbard",
+			"armor_layer_cloak", "armor_layer_cloak_front",
+			"armor_upgrade_back", "armor_upgrade_back_top", "armor_upgrade_front",
+			"helmet",
+			"helmet_helm", "helmet_helm_lower", "helmet_top", "helmet_top_lower",
+			"helmet_vanity", "helmet_vanity_2", "helmet_vanity_lower",
+			"hair", "beard", "beard_top",
+			"tattoo_body", "tattoo_head",
+			"injury", "injury_body",
+			"accessory", "accessory_special",
+			"quiver", "shaft"
+		];
+		foreach (part in parts) {
+			try {
+				if (_actor.hasSprite(part)) _actor.getSprite(part).Scale = mult;
+			} catch (e) {}
+		}
 	}
 
 	function onTargetKilled(_targetEntity, _skill) {

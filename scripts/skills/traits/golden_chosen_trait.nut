@@ -9,7 +9,7 @@ this.golden_chosen_trait <- ::inherit("scripts/skills/traits/character_trait", {
 		this.character_trait.create();
 		this.m.ID = "trait.golden_chosen";
 		this.m.Name = "Emperor's Chosen";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_emperors_chosen.png";
 		this.m.Description = "This brother has sworn himself to the Emperor's cause above all else. He will not retreat. He will not surrender. As battles stack up the Emperor's favour grows heavier in him — and so does his resolve to see this through.";
 	}
 

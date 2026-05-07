@@ -9,6 +9,50 @@ Newest first.
 
 ---
 
+## 3.0.0 — 2026-05-06
+
+**Major version bump. The big rollup: pyramid arc, sandstorm weather, ghost-dog chain, MSU page, 8-oath registry, weather and gender systems.** Combines ~5 minor versions of work since 2.9.9 into a single public release. The 3.x line marks the scenario's first real win condition (Usurper-defeat finale shipped in 2.7.0), the partner quest chain, and the post-finale pyramid arc — Golden Throne is feature-complete in the sense the original 2.x line was building toward.
+
+### New scenario content
+
+- **Phase A pyramid arc** — three-event chain (Rumor → Approach → Floor → Finale) with a custom Pyramid location and the Original boss entity. Ships full event flow, gender-paired loot, and ROTU champion-tier scaling on the boss.
+- **Ghost-dog companion chain** — five linked events (Ruins → Offer → Battle → Betrayal → Farewell) with a player-allied entity (`golden_ghost_dog_ally`) that follows the Emperor.
+- **Sandstorm weather system** — counterpart to the snow system (v2.8). On Golden Throne tactical combat in desert biomes, rolls Light / Heavy / Full severity (45/30/25), applies field-wide effects to all combatants, ambient visuals via vanilla weather API.
+
+### Player-facing systems
+
+- **MSU mod-settings page** (v2.13.0). Seven user-tunable knobs: Imperial Aura base radius (6-15 default 10), Purge Meter Tier I-IV thresholds (default 25/100/250/500), Oath Mandate-tier scaling intensity (0.0-2.0 default 1.0), and a verbose log toggle.
+- **Player-facing gender choice** (v2.6.0+). New "I am the Emperor / I am the Empress" screen prepended to the intro. Empress branch swaps voice pack, body, hair, and the GENDER world flag. v2.7.1 fixed a save-load crash on the Empress branch (VoiceSet out-of-range when male voice index exceeded female pool).
+- **Custom Emperor + Empress background art** (v2.6.4) — contributor wuxiangjinxing's PNGs ported in; Empress branch carries warrior-princess narrative description.
+
+### Architecture
+
+- **8-Oath data-driven registry** (v2.12.3). Refactored `golden_oath_trait` from per-oath switch to lookups on `::GoldenThrone.OathRegistry`. Each row carries name / description / icon / getTooltipRows / applyStats + optional hooks. Adding a 9th oath is a 1-row data add. Save-compat preserved. Lewd overlay re-synced.
+- **Snow weather system** (v2.8.0). Severity profiles (Light/Heavy/Blizzard) with terrain detection and Night-Blizzard double-dip stacking. Visual integration via Tactical.getWeather().
+
+### Endgame & quest fixes
+
+- **Thematic victory: Usurper Castle finale** (v2.7.0). Two-event chain — cleanup (if undead crisis still live) → finale (when crisis cleared). Two finale options: end campaign (real victory + credits) or continue post-story.
+- **Partner quest fixes** — gender-read crash via `getCurrentLook()` on the world-state wrapper switched to `World.Flags.get("GoldenEmperorIsFemale")` (v2.6.7). Text-substitution moved from screen `start()` to `onPrepare()` to avoid `_event.Text` doesn't-exist on screens (v2.6.8). Option-text overflow fix + repeat-trigger fix in onPrepare (v2.6.9). Belt-and-suspenders flag set across multiple lifecycle points (v2.6.10). Special events now use `isValid()` not just `onUpdateScore` per Legends event_manager pattern (v2.6.11) — root-cause fix for multi-day retriggering.
+- **Golden Knight obituary suppression** (v2.7.2). Override `onDeath` to no-op `World.Statistics.addFallen` for the death duration. Mirrors Legends's own `addFallen` wrapper pattern.
+- **Golden Brand onDamageReceived signature fix** (v2.6.3). Canonical signature is `(_attacker, _damageHitpoints, _damageArmor)` — three positional ints, not a hitInfo struct. Fix surfaced via "king of north bug" log showing `the index 'DamageRegular' does not exist` cascading into AI dead-generator errors.
+- **Pillar of Light particle perf** (v2.6.1) + **Golden Brand IconMini fix** (v2.6.2). Fixed combat slowdowns from particle count + missing brush log spam (`active_128_mini` doesn't exist; swapped to `status_effect_01_mini`).
+
+### Partner-quest endgame layering (v2.5.x)
+
+The Fallen Partner boss now ships ROTU champion-package scaling, Legendary Gold armor sets (gender-paired Light/Heavy via Legends `setUpgrade` layering), gender-paired FoTN endgame perks, and a guaranteed PoV mutagen. Light kit (Valeria duelist): dodge / nimble / pathfinder / anticipation / quick-step / backstabber / slaughterer. Heavy kit (Aldric bulwark): battle-forged / colossus / steel-brow / indomitable / legend_composure / legend_battleheart / legend_anchor.
+
+### Lewd Edition
+
+- **Imperial Charisma hook** (v2.5.8 split). When `mod_lewd` is loaded, the Emperor earns four lewd-mod perks across his existing milestone ladders (Purge I → alluring_presence; L20 → conqueror; L35 → transcendence; Purge IV → soul_harvest). Reconciled idempotently each `onUpdate`. Main zip has zero Lewd code.
+
+### Known caveats
+
+- Empress body sprite uses whatever BB rolled at spawn from `Bodies.Muscular`; post-hoc body swap not implemented (would require knowing exact Legends body-brush names).
+- Pyramid arc Beat 3 / scripted boss combat for Fallen Partner Beat 3 still narrated-only — entity definitions ship but actual combat wiring deferred to a future patch.
+
+---
+
 ## 2.9.9 — 2026-04-28
 
 **Bring Back outcome — final phantom-field cleanup (caught by audit, not by playtest).**

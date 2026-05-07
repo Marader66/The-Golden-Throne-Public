@@ -5,7 +5,7 @@ this.ascended_sovereign_trait <- ::inherit("scripts/skills/traits/character_trai
 		this.character_trait.create();
 		this.m.ID = "trait.ascended_sovereign";
 		this.m.Name = "Ascended Sovereign";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gold56.png";
 		this.m.Description = "This is what is left when a mortal king rules long enough to stop being mortal. The Emperor now casts his light across the whole battlefield, and not even the spent miracle of his resurrection wholly abandons him.";
 		this.m.Titles = ["the Ascended", "the Radiant Throne"];
 		this.m.Type = this.m.Type | ::Const.SkillType.Trait;
@@ -19,7 +19,7 @@ this.ascended_sovereign_trait <- ::inherit("scripts/skills/traits/character_trai
 		});
 		ret.push({
 			id = 11, type = "text", icon = "ui/icons/special.png",
-			text = "Grants the [color=#FFD700]Dawn's Rebirth[/color] active skill — once per battle, AoE heal."
+			text = "Grants the [color=#FFD700]Solar Ascension[/color] active skill — once per campaign, the Emperor becomes a second sun: revive every fallen ally, blind every sighted enemy, refresh every living ally."
 		});
 		ret.push({
 			id = 12, type = "text", icon = "ui/icons/days_wounded.png",
@@ -35,8 +35,8 @@ this.ascended_sovereign_trait <- ::inherit("scripts/skills/traits/character_trai
 			::World.Flags.set("GoldenEmperorAuraBonus", bonus + 5);
 		}
 		local actor = this.getContainer().getActor();
-		if (!actor.getSkills().hasSkill("actives.dawns_rebirth")) {
-			actor.getSkills().add(::new("scripts/skills/actives/dawns_rebirth_skill"));
+		if (!actor.getSkills().hasSkill("actives.solar_ascension")) {
+			actor.getSkills().add(::new("scripts/skills/actives/solar_ascension_skill"));
 		}
 	}
 

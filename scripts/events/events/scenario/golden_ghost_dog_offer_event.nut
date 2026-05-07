@@ -106,7 +106,7 @@ this.golden_ghost_dog_offer_event <- this.inherit("scripts/events/event", {
 		if (::World == null) return false;
 		local scenarioID = "";
 		try { scenarioID = ::World.Assets.getOrigin().getID(); } catch (e) { return false; }
-		if (scenarioID != "scenario.golden_throne") return false;
+		if (scenarioID != "scenario.golden_throne" && scenarioID != "scenario.three_musketeers") return false;
 		if (::World.getTime().Days < 40) return false;
 		local phase = ::World.Flags.get("GoldenGhostDogPhase");
 		if (phase != null && phase != false && phase != 0) return false;

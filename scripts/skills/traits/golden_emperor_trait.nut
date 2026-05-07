@@ -11,7 +11,7 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		character_trait.create();
 		m.ID = "trait.golden_emperor";
 		m.Name = "Undying Sovereign";
-		m.Icon = "ui/perks/holyfire_circle.png";
+		m.Icon = "ui/perks/gt_golden_emperor.png";
 		m.Description = "An ancient power stirs within. This warrior has cheated death before — and may do so once more. But the second death is final.";
 		m.Titles = ["the Undying", "the Golden", "the Sovereign"];
 		m.Type = m.Type | ::Const.SkillType.Trait;
@@ -40,12 +40,15 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 				+ (level >= 5  ? "[color=" + ::Const.UI.Color.PositiveValue + "]Pillar of Light[/color]"    : "Pillar of Light (lv 5)") + ", "
 				+ (level >= 10 ? "[color=" + ::Const.UI.Color.PositiveValue + "]Golden Command[/color]"     : "Golden Command (lv 10)") + ", "
 				+ (level >= 15 ? "[color=" + ::Const.UI.Color.PositiveValue + "]Radiant Judgement[/color]"  : "Radiant Judgement (lv 15)") + ", "
-				+ (level >= 20 ? "[color=" + ::Const.UI.Color.PositiveValue + "]Solar Ascension[/color]"    : "Solar Ascension (lv 20)") + ", "
+				+ (level >= 20 ? "[color=" + ::Const.UI.Color.PositiveValue + "]Dawn's Rebirth[/color]"     : "Dawn's Rebirth (lv 20)") + ", "
 				+ (level >= 35 ? "[color=" + ::Const.UI.Color.PositiveValue + "]Ascended Sovereign[/color]" : "Ascended Sovereign (lv 35)")
 		});
 
 		local tier = this.m.PurgeMilestonesHit;
-		local next = [25, 100, 250, 500, 9999][tier];
+		// v2.13.0 — thresholds pulled from MSU settings.
+		local thresh = ::GoldenThrone.purgeThresholds();
+		thresh.push(9999);  // sentinel for tier 4 "no next"
+		local next = thresh[tier];
 		ret.push({
 			id = 21, type = "text", icon = "ui/icons/kills.png",
 			text = "[color=#FFD700]Purge Meter[/color]: "
@@ -67,8 +70,21 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 	function onUpdate(_properties) {
 		_properties.SurvivesAsUndead = false;
 
-		local actor = this.getContainer().getActor();
+		local container = this.getContainer();
+		if (container == null) return;
+		local actor = container.getActor();
 		if (actor == null) return;
+
+		// v2.14.5 — self-heal for saves where the aura got dropped (3M
+		// scenario flow with the old `if (m.IsNew)` gate sometimes spawned
+		// the Emperor without it). If the trait exists but the aura skill
+		// is missing, re-add it on the next property recalc. Idempotent.
+		if (container.getSkillByID("actives.golden_emperor_aura") == null) {
+			try {
+				container.add(::new("scripts/skills/aura/golden_emperor_aura"));
+				::logInfo("[golden_throne] self-heal: re-added Imperial Presence aura to " + actor.getName());
+			} catch (e) { ::logWarning("[golden_throne] aura self-heal failed: " + e); }
+		}
 
 		local level = actor.getLevel();
 
@@ -80,9 +96,60 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 			}
 		}
 
+		// v2.14.11: call unconditionally — _unlockLevelPowers is hasSkill-guarded
+		// and idempotent. Self-heals existing saves where the L20 grant was the
+		// pre-swap Solar Ascension, by adding any missing skills next tick.
+		this._unlockLevelPowers(actor, level);
+
 		if (level > this.m.LastPowerUnlockLevel) {
-			this._unlockLevelPowers(actor, level);
 			this.m.LastPowerUnlockLevel = level;
+			this.onApplyAppearance();
+		}
+	}
+
+	function onCombatStarted() {
+		this.onApplyAppearance();
+	}
+
+	function onAdded() {
+		this.onApplyAppearance();
+	}
+
+	function onApplyAppearance() {
+		local container = this.getContainer();
+		if (container == null) return;
+		local actor = container.getActor();
+		if (actor == null) return;
+		this._setEmperorGrowthScale(actor);
+		try { actor.setDirty(true); } catch (e) {}
+	}
+
+	function _setEmperorGrowthScale(_actor) {
+		// Linear scale ramp from 1.00 at level 0 to 1.35 at level 20.
+		// Capped at 1.35 thereafter — chosen as the sweet spot where the
+		// silhouette reads bigger but BB's pixel-art atlases don't get
+		// visibly chunky from upscaling. Higher caps (1.45-1.65) showed
+		// pixel-blockiness on the layered armor stack. 2026-04-28 final.
+		local lvl = ::Math.min(_actor.getLevel(), 20);
+		local mult = 1.0 + (lvl / 20.0) * 0.35;
+		local parts = [
+			"body", "head", "armor", "surcoat",
+			"armor_layer_chain", "armor_layer_plate", "armor_layer_tabbard",
+			"armor_layer_cloak", "armor_layer_cloak_front",
+			"armor_upgrade_back", "armor_upgrade_back_top", "armor_upgrade_front",
+			"helmet",
+			"helmet_helm", "helmet_helm_lower", "helmet_top", "helmet_top_lower",
+			"helmet_vanity", "helmet_vanity_2", "helmet_vanity_lower",
+			"hair", "beard", "beard_top",
+			"tattoo_body", "tattoo_head",
+			"injury", "injury_body",
+			"accessory", "accessory_special",
+			"quiver", "shaft"
+		];
+		foreach (part in parts) {
+			try {
+				if (_actor.hasSprite(part)) _actor.getSprite(part).Scale = mult;
+			} catch (e) {}
 		}
 	}
 
@@ -100,9 +167,9 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 			_actor.getSkills().add(::new("scripts/skills/actives/radiant_judgement_skill"));
 			granted.push("Radiant Judgement");
 		}
-		if (_level >= 20 && !_actor.getSkills().hasSkill("actives.solar_ascension")) {
-			_actor.getSkills().add(::new("scripts/skills/actives/solar_ascension_skill"));
-			granted.push("Solar Ascension");
+		if (_level >= 20 && !_actor.getSkills().hasSkill("actives.dawns_rebirth")) {
+			_actor.getSkills().add(::new("scripts/skills/actives/dawns_rebirth_skill"));
+			granted.push("Dawn's Rebirth");
 		}
 		if (_level >= 35 && !_actor.getSkills().hasSkill("trait.ascended_sovereign")) {
 			_actor.getSkills().add(::new("scripts/skills/traits/ascended_sovereign_trait"));
@@ -140,8 +207,13 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		local flags = _targetEntity.getFlags();
 		if (!(flags.has("undead") || flags.has("beast") || flags.has("monstrous"))) return;
 
+		// v2.11.3: Purge Count moves to StackLib. Lib handles tier-callback
+		// dispatch automatically via its OnTier registration. Legacy fallback
+		// when lib absent: replicate the hand-rolled tier-advance dispatch.
+		if ("StackLib" in ::getroottable()) {
+			try { ::StackLib.add(actor, "goldenthrone.purge", 1); return; } catch (e) {}
+		}
 		this.m.PurgeCount += 1;
-
 		local newTier = this._computePurgeTier();
 		if (newTier > this.m.PurgeMilestonesHit) {
 			this.m.PurgeMilestonesHit = newTier;
@@ -154,10 +226,12 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 	}
 
 	function _computePurgeTier() {
-		if (this.m.PurgeCount >= 500) return 4;
-		if (this.m.PurgeCount >= 250) return 3;
-		if (this.m.PurgeCount >= 100) return 2;
-		if (this.m.PurgeCount >= 25) return 1;
+		// v2.13.0 — thresholds pulled from MSU settings.
+		local t = ::GoldenThrone.purgeThresholds();
+		if (this.m.PurgeCount >= t[3]) return 4;
+		if (this.m.PurgeCount >= t[2]) return 3;
+		if (this.m.PurgeCount >= t[1]) return 2;
+		if (this.m.PurgeCount >= t[0]) return 1;
 		return 0;
 	}
 
@@ -175,11 +249,16 @@ this.golden_emperor_trait <- ::inherit("scripts/skills/traits/character_trait", 
 	}
 
 	function getPurgeTier() {
+		// v2.11.3: lib is source of truth when loaded. Legacy fallback otherwise.
+		local actor = this.getContainer().getActor();
+		if (actor != null && "StackLib" in ::getroottable()) {
+			try { return ::StackLib.getTier(actor, "goldenthrone.purge"); } catch (e) {}
+		}
 		return this.m.PurgeMilestonesHit;
 	}
 
 	function onAllyKilled(_ally) {
-		if (this.m.PurgeMilestonesHit < 3) return;
+		if (this.getPurgeTier() < 3) return;
 		if (_ally == null) return;
 
 		local actor = this.getContainer().getActor();

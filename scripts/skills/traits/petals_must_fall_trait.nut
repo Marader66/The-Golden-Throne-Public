@@ -5,7 +5,7 @@ this.petals_must_fall_trait <- ::inherit("scripts/skills/traits/character_trait"
 		this.character_trait.create();
 		this.m.ID = "trait.petals_must_fall";
 		this.m.Name = "Petals Must Fall";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_petals_must_fall.png";
 		this.m.Description = "Every swing a storm. The Emperor's strikes fly wide — until one lands, and the world shatters. When they miss, the air itself carries the weight.";
 		this.m.Type = this.m.Type | ::Const.SkillType.Trait;
 	}

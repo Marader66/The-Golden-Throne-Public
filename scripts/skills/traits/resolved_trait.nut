@@ -4,7 +4,7 @@ this.resolved_trait <- ::inherit("scripts/skills/traits/character_trait", {
 	function create() {
 		this.character_trait.create();
 		this.m.ID = "trait.resolved";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_resolved.png";
 		this.m.IsPersonality = false;
 	}
 

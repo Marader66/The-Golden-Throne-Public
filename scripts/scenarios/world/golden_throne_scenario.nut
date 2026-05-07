@@ -114,7 +114,7 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		local grantEmperorTraits = function (bro) {
 			bro.getSkills().add(::new("scripts/skills/traits/golden_mandate_trait"));
 			local oath = ::new("scripts/skills/traits/golden_oath_trait");
-			oath.setOathType(::Math.rand(0, 2));
+			oath.setOathType(::Math.rand(0, 7));
 			bro.getSkills().add(oath);
 			bro.getSkills().add(::new("scripts/skills/traits/golden_chosen_trait"));
 		};
@@ -142,42 +142,107 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		monk.m.HireTime = this.Time.getVirtualTimeF();
 		monk.setPlaceInFormation(8);
 
+		// v2.10.12 — TEST WIRE-IN: Cinderwarden joins the Emperor's company.
+		// Requires Cinderwatch loaded. Cinderwarden retains Watch Points + their
+		// own trait kit AND gets the Emperor's Mandate / Oath / Chosen ladders.
+		// IsPlayerCharacter cleared so only the Emperor remains the origin
+		// (avoids campaign-end split if the Cinderwarden dies). The Cinderwarden
+		// flag also gets cleared so GT doesn't treat him as a Cinderwatch origin.
+		//
+		// v2.11.1 — fixed two bugs:
+		//   (1) `m.IsPlayerCharacter = false` threw "index does not exist" — that
+		//       attribute is a flag (set by background.onAdded), not a m-slot.
+		//       Use getFlags().remove("IsPlayerCharacter") instead.
+		//   (2) Equipment wasn't applied; bro spawned bare-chested. Now mirrors
+		//       Cinderwatch's onSpawnAssets kit: gambeson + hauberk_full,
+		//       chain_hood + kettle_hat, billhook, brass_lantern_trinket.
+		try {
+			local cinderwarden = roster.create("scripts/entity/tactical/player");
+			cinderwarden.setStartValuesEx(["cinderwarden_background"]);
+			cinderwarden.getBackground().buildDescription(true);
+			grantEmperorTraits(cinderwarden);
+			cinderwarden.getFlags().remove("IsPlayerCharacter");
+			cinderwarden.getFlags().remove("Cinderwarden");
+			cinderwarden.m.HireTime = this.Time.getVirtualTimeF();
+			cinderwarden.setPlaceInFormation(9);
+
+			// Equip the Cinderwatch starting kit (mirrors cinderwatch_scenario.nut).
+			local items = cinderwarden.getItems();
+			items.unequip(items.getItemAtSlot(this.Const.ItemSlot.Body));
+			items.unequip(items.getItemAtSlot(this.Const.ItemSlot.Head));
+			items.unequip(items.getItemAtSlot(this.Const.ItemSlot.Mainhand));
+			items.unequip(items.getItemAtSlot(this.Const.ItemSlot.Offhand));
+
+			local body = this.new("scripts/items/legend_armor/cloth/legend_armor_gambeson");
+			body.setUpgrade(this.new("scripts/items/legend_armor/chain/legend_armor_hauberk_full"));
+			items.equip(body);
+
+			local head = this.new("scripts/items/legend_helmets/hood/legend_helmet_chain_hood");
+			head.setUpgrade(this.new("scripts/items/legend_helmets/helm/legend_helmet_kettle_hat"));
+			items.equip(head);
+
+			items.equip(this.new("scripts/items/weapons/billhook"));
+			items.equip(this.new("scripts/items/misc/brass_lantern_trinket"));
+		} catch (e) {
+			::logWarning("[GT-test] Cinderwarden wire-in failed: " + e);
+		}
+
 		this.World.Assets.addBusinessReputation(this.m.StartingBusinessReputation);
 		::World.Assets.getStash().resize(::World.Assets.getStash().getCapacity() + 20);
-		this.World.Assets.m.Money += 500;
-		this.World.Assets.m.ArmorParts += 300;
-		this.World.Assets.m.Medicine += 200;
-		this.World.Assets.m.Ammo += 200;
+		// v2.11.2: cut to 1/4 of prior values (500/300/200/200 → 60/25/20/25)
+		// in line with Cinderwatch v2.3.0. Lean start across all our scenarios.
+		this.World.Assets.m.Money += 60;
+		this.World.Assets.m.ArmorParts += 25;
+		this.World.Assets.m.Medicine += 20;
+		this.World.Assets.m.Ammo += 25;
 	}
 
 	function onSpawnPlayer() {
-		local randomVillage;
-		for (local i = 0; i != this.World.EntityManager.getSettlements().len(); ++i) {
-			randomVillage = this.World.EntityManager.getSettlements()[i];
-			if (!randomVillage.isMilitary()
-				&& !randomVillage.isIsolatedFromRoads()
-				&& randomVillage.getSize() == 1)
-			{
-				break;
+		// try Raven's Nest first so player spawns next to
+		// their own holding rather than a (possibly hostile) noble town.
+		// Lifted from ROTU experimental_scenario.nut:255-291; falls
+		// through to vanilla village pick if Steward isn't loaded or
+		// no holdings spawned.
+		local tile = null;
+		if ("Rotu_Steward" in ::getroottable()
+			&& "spawnInitialPlayerSettlements" in ::Rotu_Steward)
+		{
+			local holdings = ::Rotu_Steward.spawnInitialPlayerSettlements();
+			if (holdings != null && holdings.len() > 0) {
+				local pick = holdings[::Math.rand(0, holdings.len() - 1)];
+				tile = ::Rotu_Steward.findAdjacentSpawnTile(pick, 4);
 			}
 		}
-		local tile = randomVillage.getTile();
-		do {
-			local x = this.Math.rand(
-				this.Math.max(2, tile.SquareCoords.X - 1),
-				this.Math.min(this.Const.World.Settings.SizeX - 2, tile.SquareCoords.X + 1));
-			local y = this.Math.rand(
-				this.Math.max(2, tile.SquareCoords.Y - 1),
-				this.Math.min(this.Const.World.Settings.SizeY - 2, tile.SquareCoords.Y + 1));
-			if (!this.World.isValidTileSquare(x, y)) continue;
-			local t = this.World.getTileSquare(x, y);
-			if (t.Type == this.Const.World.TerrainType.Ocean
-				|| t.Type == this.Const.World.TerrainType.Shore) continue;
-			if (t.getDistanceTo(tile) == 0) continue;
-			if (!t.HasRoad) continue;
-			tile = t;
-			break;
-		} while (1);
+
+		if (tile == null) {
+			local randomVillage;
+			for (local i = 0; i != this.World.EntityManager.getSettlements().len(); ++i) {
+				randomVillage = this.World.EntityManager.getSettlements()[i];
+				if (!randomVillage.isMilitary()
+					&& !randomVillage.isIsolatedFromRoads()
+					&& randomVillage.getSize() == 1)
+				{
+					break;
+				}
+			}
+			tile = randomVillage.getTile();
+			do {
+				local x = this.Math.rand(
+					this.Math.max(2, tile.SquareCoords.X - 1),
+					this.Math.min(this.Const.World.Settings.SizeX - 2, tile.SquareCoords.X + 1));
+				local y = this.Math.rand(
+					this.Math.max(2, tile.SquareCoords.Y - 1),
+					this.Math.min(this.Const.World.Settings.SizeY - 2, tile.SquareCoords.Y + 1));
+				if (!this.World.isValidTileSquare(x, y)) continue;
+				local t = this.World.getTileSquare(x, y);
+				if (t.Type == this.Const.World.TerrainType.Ocean
+					|| t.Type == this.Const.World.TerrainType.Shore) continue;
+				if (t.getDistanceTo(tile) == 0) continue;
+				if (!t.HasRoad) continue;
+				tile = t;
+				break;
+			} while (1);
+		}
 
 		this.World.State.m.Player = this.World.spawnEntity("scripts/entity/world/player_party", tile.Coords.X, tile.Coords.Y);
 
@@ -194,7 +259,9 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 
 		local introEvent = this.m.IntroEvent;
 		this.Time.scheduleEvent(this.TimeUnit.Real, 1000, function (_tag) {
-			this.Music.setTrackList(["music/undead_01.ogg"], this.Const.Music.CrossFadeTime);
+			try {
+				this.Music.setTrackList(["music/gilded_01.ogg"], this.Const.Music.CrossFadeTime);
+			} catch (e) {}
 			if (introEvent != null) {
 				this.World.Events.fire(introEvent);
 			}
@@ -205,7 +272,7 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		this.starting_scenario.onInit();
 		this.World.Assets.m.BrothersMaxInCombat = 27;
 		this.World.Assets.m.BrothersScaleMax = 22;
-		this.World.Assets.m.FoodAdditionalDays += 5;
+		this.World.Assets.m.FoodAdditionalDays += 20;
 		this.World.Assets.m.ExtraLootChance = 7;
 		this.World.Assets.m.ChampionChanceAdditional += 5;
 		this.World.Events.addSpecialEvent("event.mod_rotu_recruit");
@@ -219,6 +286,27 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		this.World.Events.addSpecialEvent("event.golden_ghost_dog_betrayal");
 		this.World.Events.addSpecialEvent("event.golden_ghost_dog_battle");
 		this.World.Events.addSpecialEvent("event.golden_ghost_dog_farewell");
+
+		// D4 Phase A pyramid arc events. Rumor + finale go in
+		// the score pool; approach fires from the location's OnEnter, and
+		// floor fires from approach via Events.fire. Don't add those two here.
+		this.World.Events.addSpecialEvent("event.golden_pyramid_rumor");
+		this.World.Events.addSpecialEvent("event.golden_pyramid_finale");
+
+		// v2.10.14 — Cinderwatch story arc fires inside GT when a brother
+		// with `cinderwarden_background` is in the roster. The Cinderwatch
+		// events' onUpdateScore now also accepts scenario.golden_throne
+		// when ::Cinderwatch._hasCinderwardenInRoster() returns true.
+		// Try/catch silently no-ops if Cinderwatch isn't loaded.
+		try {
+			this.World.Events.addSpecialEvent("event.cinderwatch_road_shrine");
+			this.World.Events.addSpecialEvent("event.cinderwatch_messenger");
+			this.World.Events.addSpecialEvent("event.cinderwatch_western_rumor");
+			this.World.Events.addSpecialEvent("event.cinderwatch_dim_ember");
+			this.World.Events.addSpecialEvent("event.cinderwatch_approach");
+			this.World.Events.addSpecialEvent("event.cinderwatch_dark_grows");
+			this.World.Events.addSpecialEvent("event.cinderwatch_reckoning");
+		} catch (e) {}
 	}
 
 	function onCombatFinished() {
@@ -291,14 +379,26 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		if (bro.getFlags().get("IsPlayerCharacter")) return;
 
 		bro.getSkills().add(this.new("scripts/skills/traits/golden_mandate_trait"));
-		local oath = ::new("scripts/skills/traits/golden_oath_trait");
-		oath.setOathType(::Math.rand(0, 2));
-		bro.getSkills().add(oath);
 		bro.getSkills().add(this.new("scripts/skills/traits/golden_chosen_trait"));
 		bro.improveMood(3.0, "For the Emperor and the Golden Throne!");
 
 		if (bro.getFlags().has("human")) {
 			bro.getSkills().add(::new("scripts/skills/traits/legend_deathly_spectre_trait"));
+		}
+
+		// v2.11.0 — Phase 2 oath UI. Player picks 1 of 3 randomly-drawn
+		// oaths (from the 8-oath pool) instead of getting a random roll.
+		// The oath trait is added with a temp type 0 (Steel) and replaced
+		// once the player picks. CardPicker handles back-to-back hires.
+		local oath = ::new("scripts/skills/traits/golden_oath_trait");
+		oath.setOathType(0);
+		bro.getSkills().add(oath);
+
+		if ("GoldenThrone" in ::getroottable() && "showOathPickCard" in ::GoldenThrone) {
+			::GoldenThrone.showOathPickCard(bro, oath);
+		} else {
+			// Fallback: random oath if card picker missing
+			oath.setOathType(::Math.rand(0, 7));
 		}
 	}
 

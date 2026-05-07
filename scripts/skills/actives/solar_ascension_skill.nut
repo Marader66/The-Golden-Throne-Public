@@ -5,7 +5,7 @@ this.solar_ascension_skill <- this.inherit("scripts/skills/skill", {
 		this.m.ID = "actives.solar_ascension";
 		this.m.Name = "Solar Ascension";
 		this.m.Description = "The Emperor ascends for one terrible moment, becoming a second sun. The fallen rise, borrowed from death for as long as this light endures. The living are remade — vigor returned, exhaustion lifted, every blade and prayer ready again. This miracle is given only once in a reign.";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_solar_ascension.png";
 		this.m.IconDisabled = "ui/perks/holyfire_circle.png";
 		this.m.Overlay = "active_128";
 		this.m.SoundOnUse = ["sounds/combat/pov_holy_fire_04.wav"];

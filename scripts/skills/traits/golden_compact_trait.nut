@@ -7,7 +7,7 @@ this.golden_compact_trait <- ::inherit("scripts/skills/traits/character_trait", 
 		this.character_trait.create();
 		this.m.ID = "trait.golden_compact";
 		this.m.Name = "The Undying Compact";
-		this.m.Icon = "ui/perks/holyfire_circle.png";
+		this.m.Icon = "ui/perks/gt_undying_compact.png";
 		this.m.Description = "A veteran who has witnessed the Emperor's resurrection first-hand carries a fragment of that divine defiance. Once per campaign death turns aside. After that, the compact is spent.";
 	}
 
