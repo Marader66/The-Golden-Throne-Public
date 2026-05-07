@@ -9,6 +9,32 @@ Newest first.
 
 ---
 
+## 3.0.3 — 2026-05-07
+
+**Patch — fixes a critical crash that triggered for any oath-bearing brother during multi-target combat.** High-priority install if you've been crashing during Pillar of Light AoEs or noticed log spam during normal combat.
+
+### The crash
+
+Reported by a tester running Legends 19.3.24 + FoTN 0.5.48 + ROTU 3.5.7. Every time damage flowed through the dispatch chain on a brother carrying an Oath of the Throne, our trait's `onBeforeDamageReceived` declared the wrong number of arguments — 3 args where MSU's canonical skill-container dispatch passes 4. Squirrel threw "wrong number of parameters" every hit. In bad combats — Pillar of Light hitting 5+ enemies who were each themselves carrying oaths — the cascade eventually triggered an engine-level binary crash that our Squirrel try/catch couldn't intercept.
+
+The bug was latent since v2.12.3's oath-registry refactor. Never surfaced internally because our test stack didn't exercise the FoTN-actor-hook + ROTU-buildPropertiesForBeingHit chain that newer versions of those mods route damage through.
+
+**Fix:** widened `golden_oath_trait.onBeforeDamageReceived` and the Vigilance registry def to the MSU-canonical 4-arg signature `(_attacker, _skill, _hitInfo, _properties)`. The Vigilance oath's friendly-fire and untouchable logic operates on `_properties` directly so `_hitInfo` is just received and ignored, but the dispatch must accept the same arity it's called with.
+
+### Phantom asset path
+
+`gfx/ui/perks/perk_70.png` doesn't ship in vanilla, Legends, or ROTU — phantom path. Two references in GT:
+- Oath of Stone card art in the OathSelect UI block — replaced with `ui/perks/anchor.png` (verified vanilla, matches the actual Stone oath registry icon).
+- Same fix in the Lewd Edition overlay.
+
+13 "Unable to open file" log warnings per session were tied to this.
+
+### Save compatibility
+
+Save files from v3.0.2 / v3.0.1 / v3.0.0 / v2.8.0 forward all load on this build. Direct in-place upgrade — drop the new zip in.
+
+---
+
 ## 3.0.2 — 2026-05-07
 
 **Patch — two defensive bug fixes from a friend's log triage.**

@@ -190,8 +190,17 @@ this.golden_oath_trait <- ::inherit("scripts/skills/traits/character_trait", {
 		} catch (e) {}
 	}
 
-	function onBeforeDamageReceived(_attacker, _skill, _properties) {
-		this._callDefHook("onBeforeDamageReceived", [this, this, _attacker, _skill, _properties]);
+	function onBeforeDamageReceived(_attacker, _skill, _hitInfo, _properties) {
+		// v3.0.3 — signature widened from 3 args (_attacker, _skill, _properties)
+		// to MSU canonical 4 args (_attacker, _skill, _hitInfo, _properties).
+		// MSU's skill_container.onBeforeDamageReceived dispatch (msu/hooks/
+		// skills/skill_container.nut:76) iterates skills and calls each with
+		// the 4-arg shape; our 3-arg signature was throwing "wrong number of
+		// parameters" every time damage flowed through ROTU's
+		// buildPropertiesForBeingHit chain (zalew log 2026-05-07: 58
+		// occurrences in one combat, ultimately crashing BB during a Pillar
+		// of Light cast that processed multiple oath-bearing brothers).
+		this._callDefHook("onBeforeDamageReceived", [this, this, _attacker, _skill, _hitInfo, _properties]);
 	}
 
 	function onCombatStarted() {

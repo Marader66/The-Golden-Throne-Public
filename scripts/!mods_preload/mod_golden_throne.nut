@@ -1,6 +1,6 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "3.0.2",
+	Version = "3.0.3",
 	Name = "The Golden Throne"
 };
 
@@ -302,7 +302,12 @@
                 _trait.m.HasUntouchable = true;
             }
         },
-        onBeforeDamageReceived = function (_trait, _attacker, _skill, _properties) {
+        onBeforeDamageReceived = function (_trait, _attacker, _skill, _hitInfo, _properties) {
+            // v3.0.3 — sig widened to take _hitInfo (passed through from the
+            // trait class's MSU-canonical 4-arg onBeforeDamageReceived). The
+            // Vigilance oath doesn't actually use _hitInfo — the regular /
+            // armor damage zeroing happens via _properties — but the registry
+            // dispatch must accept the same arity the trait class accepts.
             local actor = _trait.getContainer().getActor();
             // Friendly-fire immunity
             if (_attacker != null && actor != null && _attacker.isAlliedWith(actor) && _attacker != actor) {
@@ -871,7 +876,7 @@
 	{ id = "1", title = "Oath of Stone",     subtitle = "The shield is the prayer",
 	  flavor = "Steadfast posture. Armor remembers its purpose; defense holds where weaker walls would crack.",
 	  mechanics = "+15% Armor (body + head) | +8 Melee Defense | +8 Ranged Defense | -10% damage taken",
-	  artPath = "ui/perks/perk_70.png" },
+	  artPath = "ui/perks/anchor.png" },
 	{ id = "2", title = "Oath of Light",     subtitle = "The flame is the prayer",
 	  flavor = "Beacon of conviction. Morale anchored; the dark recoils.",
 	  mechanics = "+15 Resolve | Half morale loss | +20% damage vs undead",
