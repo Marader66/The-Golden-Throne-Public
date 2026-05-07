@@ -8,7 +8,7 @@ Grab the latest zip from the [Releases page](https://github.com/Marader66/The-Go
 
 Two editions ship with every release:
 
-- **Main edition** — `zmod_golden_throne_<version>_INN.zip`. The standard build. Pick this unless you specifically want the Lewd-mod-gated Imperial Charisma perks.
+- **Main edition** — `zmod_golden_throne_<version>.zip`. The standard build. Pick this unless you specifically want the Lewd-mod-gated Imperial Charisma perks.
 - **Lewd Edition** — `zmod_golden_throne_<version>_LEWD.zip`. Same scenario, plus four `mod_lewd` perks granted on the Emperor's existing milestone unlocks.
 
 Both editions register as the same mod ID. **Install one or the other, never both.**
