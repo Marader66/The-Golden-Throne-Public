@@ -1,6 +1,6 @@
 ::GoldenThrone <- {
 	ID = "mod_golden_throne",
-	Version = "3.0.1",
+	Version = "3.0.2",
 	Name = "The Golden Throne"
 };
 
@@ -283,7 +283,18 @@
             _properties.Vision              += 1;  // integer; stays +1
             _properties.RangedSkill         += (5  * _mult).tointeger();
             _properties.Initiative          += (10 * _mult).tointeger();
-            _properties.FatigueEffectiveMax += (10 * _mult).tointeger();
+            // v3.0.2 — defensive in-check on FatigueEffectiveMax. That
+            // property is Legends-extended; it may be missing from the
+            // currentProperties table on older Legends versions or on
+            // certain property-eval paths (e.g. some skill tooltips). Fall
+            // back to the vanilla Stamina (raw max-fatigue) if so. Same
+            // delta either way; cap-effect equivalent on vanilla.
+            local fatBump = (10 * _mult).tointeger();
+            if ("FatigueEffectiveMax" in _properties) {
+                _properties.FatigueEffectiveMax += fatBump;
+            } else if ("Stamina" in _properties) {
+                _properties.Stamina += fatBump;
+            }
             // friendly-fire + untouchable handled in onBeforeDamageReceived
         },
         onTurnStart = function (_trait, _actor) {
