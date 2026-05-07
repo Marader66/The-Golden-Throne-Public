@@ -9,6 +9,21 @@ Newest first.
 
 ---
 
+## 3.0.1 — 2026-05-07
+
+**Patch — dependency declaration fix.**
+
+The v3.0.0 release inadvertently declared `mod_ROTUC = "3.0.2"` as the required floor in the preload's `Deps.Required` block. Reverted to **`mod_ROTUC = "2.1.2"`** in both the main edition and the Lewd Edition overlay — the documented public-target minimum.
+
+No functional change. The mod ran correctly on ROTU 2.1.2+ already; only the declared version floor was wrong. If you were already running ROTU 3.x you won't see any difference. If you're running ROTU 2.1.2 through 3.0.1, this version will no longer flag your install as below the declared floor.
+
+Other dependency floors unchanged:
+- `mod_legends >= 19.3.17`
+- `mod_msu >= 1.2.7`
+- `mod_modern_hooks >= 0.4.0`
+
+---
+
 ## 3.0.0 — 2026-05-06
 
 **Major version bump. The big rollup: pyramid arc, sandstorm weather, ghost-dog chain, MSU page, 8-oath registry, weather and gender systems.** Combines ~5 minor versions of work since 2.9.9 into a single public release. The 3.x line marks the scenario's first real win condition (Usurper-defeat finale shipped in 2.7.0), the partner quest chain, and the post-finale pyramid arc — Golden Throne is feature-complete in the sense the original 2.x line was building toward.
