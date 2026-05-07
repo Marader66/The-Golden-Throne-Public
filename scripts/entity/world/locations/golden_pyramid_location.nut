@@ -5,7 +5,7 @@
 // the actual dungeon entry on key-holder presence; this location is just
 // the world-map handle.
 //
-// Pattern lifted from mod_rotucore_inn's usurpercastle_location.nut +
+// Pattern lifted from mod_rotucore's usurpercastle_location.nut +
 // mod_Black_Pyramid's black_pyramid_location.nut. Sprite brush set in
 // onInit (final brush selection awaits research-agent return; placeholder
 // uses Black Pyramid's existing brush which is already in our stack).
