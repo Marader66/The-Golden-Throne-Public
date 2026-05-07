@@ -1,4 +1,4 @@
-// v2.14.0-alpha — D4 Phase A, Beat 1.
+// D4 Phase A, Beat 1.
 //
 // Fires Day +30 after the Usurper falls AND the player chose "raise the banner
 // again" on the v2.7.0 finale event AND a key-holder is present in the roster.
@@ -193,7 +193,7 @@ this.golden_pyramid_rumor_event <- this.inherit("scripts/events/event", {
 		// Already fired — don't refire.
 		if (::World.Flags.get("GoldenPyramidRumored")) return false;
 
-		// v2.14.0-alpha — debug bypass for testing. Set via dev console:
+		// debug bypass for testing. Set via dev console:
 		//   World.Flags.set("GoldenPyramidDebugForceTrigger", true)
 		// then wait one world tick (or open camp/move). Bypasses ALL gates
 		// below (Usurper, FinaleContinued, day, key-holder).

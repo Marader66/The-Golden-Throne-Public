@@ -1,4 +1,4 @@
-// v2.14.1-alpha — refactored to use ::GoldenThrone.InheritHelper.sandstormEffect.
+// refactored to use ::GoldenThrone.InheritHelper.sandstormEffect.
 this.golden_sandstorm_light_effect <- this.inherit("scripts/skills/skill",
     ::GoldenThrone.InheritHelper.sandstormEffect({
         id = "light",

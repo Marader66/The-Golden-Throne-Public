@@ -1,4 +1,4 @@
-// v2.14.0-alpha — passive marker on the Emperor after the Original falls.
+// passive marker on the Emperor after the Original falls.
 // The two ultimate miracles (Solar Ascension, Dawn's Rebirth) were burned
 // out in the breaking of the dead curse. The Emperor still carries the
 // fire in his hands — Pillar of Light, Radiant Judgement, Golden Command

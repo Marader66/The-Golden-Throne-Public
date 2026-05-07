@@ -1,4 +1,4 @@
-// v2.14.1-alpha — sandstorm severity-3 effect.
+// sandstorm severity-3 effect.
 //
 // Stat penalties (-10 RS / -3 MS / -4 Init / -3 Vision) PLUS turn-start
 // per-actor effects:

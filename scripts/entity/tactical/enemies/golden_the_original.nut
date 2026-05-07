@@ -1,4 +1,4 @@
-// v2.14.0-alpha — The Original. D4 Phase A boss.
+// The Original. D4 Phase A boss.
 //
 // A god-fragment from before the empire — older than the Usurper, older than
 // the dead curse. Splintered across the world; the Usurper was one shard,
@@ -16,7 +16,7 @@
 this.golden_the_original <- this.inherit("scripts/entity/tactical/player", {
 	m = {
 		IsFemale = true,
-		IsEnraged = false   // v2.14.0-alpha2 — flips at <=50% HP
+		IsEnraged = false   // flips at <=50% HP
 	},
 
 	function create() {
@@ -65,7 +65,7 @@ this.golden_the_original <- this.inherit("scripts/entity/tactical/player", {
 		}
 
 		local bp = this.m.BaseProperties;
-		// v2.14.0-alpha — base HP 400 × 1.8 ROTU scaling at Day 250 → ~1080 HP.
+		// base HP 400 × 1.8 ROTU scaling at Day 250 → ~1080 HP.
 		// Comfortably clears the 1000-HP "feels like a real capstone" floor.
 		bp.Hitpoints = 400;
 		bp.Bravery = 300;
@@ -287,14 +287,14 @@ this.golden_the_original <- this.inherit("scripts/entity/tactical/player", {
 		if (vigor != null && vigor.m.StackCount > 5) vigor.m.StackCount = 5;
 		local ironwill = this.m.Skills.getSkillByID("effects.fotn_iron_will");
 		if (ironwill != null && ironwill.m.StackCount > 10) ironwill.m.StackCount = 10;
-		// v2.14.0-alpha2 — refresh miasma on the boss's tile + 6 adjacent at
+		// refresh miasma on the boss's tile + 6 adjacent at
 		// every turn-start. Pattern lifted from ROTU's usurper_boss miasma
 		// (lines 411-483). 2-round timeout on each tile so corruption follows
 		// him as he moves.
 		this._applyMiasma();
 	}
 
-	// v2.14.0-alpha2 — DAMAGE-TYPE RESISTANCE.
+	// DAMAGE-TYPE RESISTANCE.
 	// Resistant to Cutting + Piercing (50% damage taken). Full damage from
 	// Blunt + Burning (the carve-out). Forces players to bring hammers,
 	// flails, or holy actives — narrative fits "the Original's flesh is
@@ -314,7 +314,7 @@ this.golden_the_original <- this.inherit("scripts/entity/tactical/player", {
 		} catch (e) {}
 	}
 
-	// v2.14.0-alpha2 — HP-50% PHASE FLIP.
+	// HP-50% PHASE FLIP.
 	// One-time enrage when boss drops to half HP. Adds 20% damage mult,
 	// switches tint from sun-scorched gold to active red-gold (the dust
 	// stops; the wind shifts; he is no longer waiting). Idempotent flag
@@ -344,7 +344,7 @@ this.golden_the_original <- this.inherit("scripts/entity/tactical/player", {
 		return ret;
 	}
 
-	// v2.14.0-alpha2 — MIASMA AURA.
+	// MIASMA AURA.
 	// Refreshes a 7-tile miasma footprint (boss + 6 hex neighbors) at every
 	// turn-start. Tile-tagged via vanilla BB Const.Tactical.Common.onApplyMiasma
 	// callback, 2-round timeout per refresh. Filters undead + monstrous so

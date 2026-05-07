@@ -1,4 +1,4 @@
-// v2.14.0-alpha — Golden Throne D4 Phase A pyramid location.
+// Golden Throne D4 Phase A pyramid location.
 //
 // Lives at a random desert tile after Beat 1 rumor commits to PUSH or PRAY.
 // Routes onEnter to event.golden_pyramid_approach (Beat 2). Approach gates

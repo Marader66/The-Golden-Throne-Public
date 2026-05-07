@@ -1,4 +1,4 @@
-// v2.14.0-alpha — D4 Phase A, Beat 3. The 5-floor pyramid dungeon.
+// D4 Phase A, Beat 3. The 5-floor pyramid dungeon.
 //
 // Single event with progress flag pattern. Lifted from ROTU's Usurper Castle
 // (`usurpercastle_enter_event.nut`) but compressed to 5 floors. The lobby

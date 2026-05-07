@@ -1,4 +1,4 @@
-// v2.14.0-alpha — Reclaimer trait. Awarded to the Emperor on D4 Phase A
+// Reclaimer trait. Awarded to the Emperor on D4 Phase A
 // finale (the Original's death). Marks the Emperor as the one who broke
 // the dead curse. Personal capstone: small permanent stat passive +
 // gold-eyes/light-tinged identity layer.

@@ -118,7 +118,7 @@
     };
 };
 
-// v2.14.1-alpha — sandstorm equivalent of snowEffect. Same shape, different
+// sandstorm equivalent of snowEffect. Same shape, different
 // ID prefix, different default icon (status_effect_098 = sand-tinted vanilla
 // brush). Used by 3 sandstorm effect files (light/heavy/full).
 ::GoldenThrone.InheritHelper.sandstormEffect <- function (_def) {
@@ -471,7 +471,7 @@
 	];
 };
 
-// v2.14.0-alpha — D4 Phase A pyramid spawn helper. Called from the rumor
+// D4 Phase A pyramid spawn helper. Called from the rumor
 // event's PUSH/PRAY/DISMISS handlers. Tries to find a desert tile within
 // 12-30 hex distance of the player; falls back to ANY desert tile if the
 // nearby search fails. Spawns the location and (on commit paths) marks it
@@ -644,7 +644,7 @@
 		}
 	} catch (e) {}
 
-	// v2.14.2-alpha — Moderate weather rates. 35% chance of NO storm
+	// Moderate weather rates. 35% chance of NO storm
 	// (clear weather, no effect applied). Within the 65% storm window:
 	// 30% Light / 20% Heavy / 15% Blizzard (mirrors the moderate ratios
 	// used by the sandstorm system). Earlier always-storm pattern (45/30/25)
@@ -686,13 +686,13 @@
 	::logInfo("[GoldenThrone] snow weather applied: " + severity + (applyNight ? " + night" : ""));
 };
 
-// ── Sandstorm weather system (v2.14.1-alpha) ─────────────────────────
+// ── Sandstorm weather system ─────────────────────────────────────────
 // Desert-biome equivalent of snow. Same scenario gate (Golden Throne or
 // Three Musketeers), same per-combat guard, same severity probabilities
 // (45% light / 30% heavy / 25% full sandstorm). Applies to every
 // combatant on the field, ally and enemy alike.
 
-// v2.14.2-alpha — Nomad detection. Used by sandstorm apply-loop to skip
+// Nomad detection. Used by sandstorm apply-loop to skip
 // these actors entirely (they don't get any sandstorm effect — narrative
 // reason is "they're desert people; they grew up under this storm").
 // Detection: nomad_background, nomad_ranged_background, or any actor
@@ -815,7 +815,7 @@
 		}
 	} catch (e) {}
 
-	// v2.14.2-alpha — Moderate weather rates. 35% no storm / 30% light /
+	// Moderate weather rates. 35% no storm / 30% light /
 	// 20% heavy / 15% full sandstorm. Mirrors the snow rates.
 	local roll = ::Math.rand(1, 100);
 	if (roll <= 35) {
@@ -1033,7 +1033,7 @@
 		::World.Events.register("event.golden_ghost_dog_betrayal", "scripts/events/events/scenario/golden_ghost_dog_betrayal_event");
 		::World.Events.register("event.golden_ghost_dog_battle", "scripts/events/events/scenario/golden_ghost_dog_battle_event");
 		::World.Events.register("event.golden_ghost_dog_farewell", "scripts/events/events/scenario/golden_ghost_dog_farewell_event");
-		// v2.14.0-alpha — D4 Phase A pyramid arc events.
+		// D4 Phase A pyramid arc events.
 		::World.Events.register("event.golden_pyramid_rumor",    "scripts/events/events/scenario/golden_pyramid_rumor_event");
 		::World.Events.register("event.golden_pyramid_approach", "scripts/events/events/scenario/golden_pyramid_approach_event");
 		::World.Events.register("event.golden_pyramid_floor",    "scripts/events/events/scenario/golden_pyramid_floor_event");
@@ -1067,7 +1067,7 @@
 			try { ::GoldenThrone.rollAndApplySnow.call(this); } catch (e) {
 				::logWarning("[GoldenThrone] rollAndApplySnow threw: " + e);
 			}
-			// v2.14.1-alpha — sandstorm rolls in parallel. Each function
+			// sandstorm rolls in parallel. Each function
 			// terrain-gates internally so they're mutually exclusive in
 			// practice (snow tiles vs desert tiles).
 			try { ::GoldenThrone.rollAndApplySandstorm.call(this); } catch (e) {

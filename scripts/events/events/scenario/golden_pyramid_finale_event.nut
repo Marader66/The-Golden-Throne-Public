@@ -1,4 +1,4 @@
-// v2.14.0-alpha — D4 Phase A, Beat 4. The aftermath of the Original's death.
+// D4 Phase A, Beat 4. The aftermath of the Original's death.
 //
 // Triggered after `GoldenPyramidComplete` is set (player won floor 5). Fires
 // once. Does the heavy lifting:

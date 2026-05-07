@@ -198,7 +198,7 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 	}
 
 	function onSpawnPlayer() {
-		// v2.14.8-alpha: try Raven's Nest first so player spawns next to
+		// try Raven's Nest first so player spawns next to
 		// their own holding rather than a (possibly hostile) noble town.
 		// Lifted from ROTU experimental_scenario.nut:255-291; falls
 		// through to vanilla village pick if Steward isn't loaded or
@@ -287,7 +287,7 @@ this.golden_throne_scenario <- this.inherit("scripts/scenarios/world/tainted_wor
 		this.World.Events.addSpecialEvent("event.golden_ghost_dog_battle");
 		this.World.Events.addSpecialEvent("event.golden_ghost_dog_farewell");
 
-		// v2.14.0-alpha — D4 Phase A pyramid arc events. Rumor + finale go in
+		// D4 Phase A pyramid arc events. Rumor + finale go in
 		// the score pool; approach fires from the location's OnEnter, and
 		// floor fires from approach via Events.fire. Don't add those two here.
 		this.World.Events.addSpecialEvent("event.golden_pyramid_rumor");

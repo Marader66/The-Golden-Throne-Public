@@ -1,4 +1,4 @@
-// v2.14.0-alpha — D4 Phase A, Beat 2. Pyramid entry-gate event.
+// D4 Phase A, Beat 2. Pyramid entry-gate event.
 //
 // Triggered by the pyramid location's onEnter. Routes to:
 //   - event.golden_pyramid_floor  (if a key-holder is present)
@@ -14,7 +14,7 @@ this.golden_pyramid_approach_event <- this.inherit("scripts/events/event", {
 
 	function _hasKeyHolder() {
 		if (::World == null) return false;
-		// v2.14.0-alpha — debug bypass for testing.
+		// debug bypass for testing.
 		if (::World.Flags.get("GoldenPyramidDebugForceTrigger")) return true;
 		try {
 			if ("Cinderwatch" in ::getroottable()
