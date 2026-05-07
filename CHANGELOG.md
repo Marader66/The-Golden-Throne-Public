@@ -9,9 +9,9 @@ Newest first.
 
 ---
 
-## 2.14.11 — 2026-05-06
+## 3.0.0 — 2026-05-06
 
-**The big rollup: pyramid arc, sandstorm weather, ghost-dog chain, MSU page, 8-oath registry, weather and gender systems.** Combines ~5 minor versions of work since 2.9.9 into a single public release.
+**Major version bump. The big rollup: pyramid arc, sandstorm weather, ghost-dog chain, MSU page, 8-oath registry, weather and gender systems.** Combines ~5 minor versions of work since 2.9.9 into a single public release. The 3.x line marks the scenario's first real win condition (Usurper-defeat finale shipped in 2.7.0), the partner quest chain, and the post-finale pyramid arc — Golden Throne is feature-complete in the sense the original 2.x line was building toward.
 
 ### New scenario content
 
